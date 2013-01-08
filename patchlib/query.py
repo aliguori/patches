@@ -99,83 +99,90 @@ def parse_query(query):
 
     return i, terms
 
-def eval_unary_query(series, terms):
-    if type(terms) in [str, unicode]:
-        ret = False
+def eval_query_term(series, term):
+    ret = False
 
-        if terms.startswith('status:'):
-            _, status = terms.split(':', 1)
-            status = status.lower()
+    if term.startswith('status:'):
+        _, status = term.split(':', 1)
+        status = status.lower()
 
-            if status == 'broken':
-                ret = is_broken(series)
-            elif status == 'obsolete':
-                ret = is_obsolete(series)
-            elif status == 'pull-request':
-                ret = is_pull_request(series)
-            elif status == 'rfc':
-                ret = is_rfc(series)
-            elif status == 'unapplied':
-                ret = not (is_broken(series) or
-                           is_obsolete(series) or
-                           is_pull_request(series) or
-                           is_rfc(series) or
-                           is_committed(series))
-            elif status == 'committed':
-                ret = is_committed(series)
-            elif status == 'reviewed':
-                ret = is_reviewed(series)
-            else:
-                raise Exception("Unknown status `%s'" % status)
-        elif terms.startswith('from:'):
-            _, addr = terms.split(':', 1)
-            for message in series['messages']:
-                if match_email_address(message['from'], addr):
-                    ret = True
-                    break
-        elif terms.startswith('to:'):
-            _, addr = terms.split(':', 1)
-            for message in series['messages']:
-                for to in message['to']:
-                    if match_email_address(to, addr):
-                        ret = True
-                        break
-                if ret:
-                    break
-
-                for cc in message['cc']:
-                    if match_email_address(cc, addr):
-                        ret = True
-                        break
-                if ret:
-                    break
+        if status == 'broken':
+            ret = is_broken(series)
+        elif status == 'obsolete':
+            ret = is_obsolete(series)
+        elif status == 'pull-request':
+            ret = is_pull_request(series)
+        elif status == 'rfc':
+            ret = is_rfc(series)
+        elif status == 'unapplied':
+            ret = not (is_broken(series) or
+                       is_obsolete(series) or
+                       is_pull_request(series) or
+                       is_rfc(series) or
+                       is_committed(series))
+        elif status == 'committed':
+            ret = is_committed(series)
+        elif status == 'reviewed':
+            ret = is_reviewed(series)
         else:
-            for message in series['messages']:
-                if message['subject'].lower().find(terms.lower()) != -1:
+            raise Exception("Unknown status `%s'" % status)
+    elif term.startswith('from:'):
+        _, addr = term.split(':', 1)
+        for message in series['messages']:
+            if match_email_address(message['from'], addr):
+                ret = True
+                break
+    elif term.startswith('to:'):
+        _, addr = term.split(':', 1)
+        for message in series['messages']:
+            for to in message['to']:
+                if match_email_address(to, addr):
                     ret = True
                     break
-        return ret, None
-    elif len(terms) == 0:
-        return ret, None
-    elif terms[0] == 'not':
-        return not eval_query(series, terms[1])[0], terms[2:]
+            if ret:
+                break
+
+            for cc in message['cc']:
+                if match_email_address(cc, addr):
+                    ret = True
+                    break
+            if ret:
+                break
     else:
-        return eval_query(series, terms[0])[0], terms[1:]
+        for message in series['messages']:
+            if message['subject'].lower().find(term.lower()) != -1:
+                ret = True
+                break
+    return ret, None
+
+def eval_unary_query(series, terms):
+    if type(terms) == list:
+        if len(terms) == 0:
+            return ret, None
+        elif terms[0] == 'not':
+            return not eval_query(series, terms[1])[0], terms[2:]
+        else:
+            return eval_query(series, terms[0])[0], terms[1:]
+    else:
+        return eval_query_term(series, terms)
     
-def eval_query(series, terms):
+def eval_binop_query(series, terms):
     lhs, rest = eval_unary_query(series, terms)
     if not rest:
         return lhs, rest
 
     if rest[0] == 'and':
-        rhs, rest = eval_query(series, rest[1:])
+        rhs, rest = eval_binop_query(series, rest[1:])
         return lhs and rhs, rest
     elif rest[0] == 'or':
-        rhs, rest = eval_query(series, rest[1:])
+        rhs, rest = eval_binop_query(series, rest[1:])
         return lhs or rhs, rest
     else:
-        rhs, rest = eval_query(series, rest)
+        rhs, rest = eval_binop_query(series, rest)
         return lhs and rhs, rest
+
+def eval_query(series, terms):
+    return eval_binop_query(series, terms)
 
 def find_subseries(patches, args):
     sub_series = []
