@@ -1,6 +1,8 @@
-= patches Patch Tracking System =
+patches Patch Tracking System
+=============================
 
-== About ==
+About
+-----
 
 patches is a patch tracking system.  It consists of two parts: a set of
 commands that build a database of patches from a mailing list and then a set
@@ -13,38 +15,41 @@ of commands that can search that database.  It supports the following features:
 
 - Searching for patches using a rich query language.
 
-== Install ==
+Install
+-------
 
-$ python setup.py install
+    $ python setup.py install
 
 There are no dependencies if you are working with an existing database.  To
 build a new database, you need python-notmuch.
 
-== Quick Start ==
+Quick Start
+-----------
 
 To get started with the QEMU project:
 
-        $ patches fetch http://wiki.qemu.org/patches/patches.json
-        $ patches list
-        Message-id: 1357498122-1129-1-git-send-email-afaerber@suse.de
-        From: Andreas Färber <afaerber@suse.de>
-           [0/2] QOM realize, device-only
-           [1/2] qdev: Fold state enum into bool realized
-           [2/2] qdev: Prepare "realized" property
-        
-        Message-id: 1357497091-30013-1-git-send-email-afaerber@suse.de
-        From: Andreas Färber <afaerber@suse.de>
-           [0/2] PowerPCCPU subclasses
-           [1/2] target-ppc: Slim conversion of model definitions to QOM subcl..
-           [2/2] target-ppc: Error out for -cpu host on unknown PVR
-        ...
-        $ patches apply 1357498122-1129-1-git-send-email-afaerber@suse.de
-        Applying: qdev: Fold state enum into bool realized
-        Applying: qdev: Prepare "realized" property
+    $ patches fetch http://wiki.qemu.org/patches/patches.json
+    $ patches list
+    Message-id: 1357498122-1129-1-git-send-email-afaerber@suse.de
+    From: Andreas Färber <afaerber@suse.de>
+       [0/2] QOM realize, device-only
+       [1/2] qdev: Fold state enum into bool realized
+       [2/2] qdev: Prepare "realized" property
+    
+    Message-id: 1357497091-30013-1-git-send-email-afaerber@suse.de
+    From: Andreas Färber <afaerber@suse.de>
+       [0/2] PowerPCCPU subclasses
+       [1/2] target-ppc: Slim conversion of model definitions to QOM subcl..
+       [2/2] target-ppc: Error out for -cpu host on unknown PVR
+    ...
+    $ patches apply 1357498122-1129-1-git-send-email-afaerber@suse.de
+    Applying: qdev: Fold state enum into bool realized
+    Applying: qdev: Prepare "realized" property
 
 The fetch command should be run whenever you want to refresh the patch database.
 
-== Search Language ==
+Search Language
+---------------
 
 The query language supported by patches support boolean operators "and", "or",
 and "not".  Paranthesis and string quotation is also supported.  Terms are
@@ -63,20 +68,22 @@ than subject text.  The following prefixes are supported:
 - ''to:ADDRESS'' show series where '''ADDRESS''' is on the receipent list
 - ''from:ADDRESS'' show series where '''ADDRESS''' is the sender
 
-== Query Examples ==
+Query Examples
+--------------
 
 Show unapplied patches where 'Anthony Liguori' was CC'd:
 
-        $ patches list 'to:"Anthony Liguori" status:unapplied'
+    $ patches list 'to:"Anthony Liguori" status:unapplied'
 
 Note that the whole query is wrapped in single quotes.  This is necessary to
 avoid having conflicts between shell quote interpretation and patches.
 
 Limit the search to only patches that haven't been reviewed yet:
 
-        $ patches list 'to:"Anthony Liguori" status:unapplied not status:reviewed'
+    $ patches list 'to:"Anthony Liguori" status:unapplied not status:reviewed'
 
-== Integration with Notmuch ==
+Integration with Notmuch
+------------------------
 
 patches is not meant to be a tool to review patches directly.  Instead, it is
 designed to integrate with mail clients for displaying patches.
@@ -86,7 +93,8 @@ patches to output a notmuch search query instead of a stylized output.  The
 included patches.el wraps this in a ELISP interactive function that will invoke
 the notmuch-search major mode directly.
 
-== Applying Patches and Pull Requests ==
+Applying Patches and Pull Requests
+----------------------------------
 
 Given a message-id of any patch within a series, patches can apply a patch
 series or pull request.  This is meant to allow integration with mail clients
@@ -94,58 +102,60 @@ that can call out to a external program to process a mail.  An ELISP function
 is provided in patches.el that can be bound to a key press to apply a patch
 directly from the notmuch-search major mode.
 
-== Setting up a New Patch Database ==
+Setting up a New Patch Database
+-------------------------------
 
 To setup a new patch database, you need to create a '''~/.patchesrc''' file with
 at least the following sections:
 
-        [scan]
-        # The tag that mailman prepends to all messages.  This can be omitted
-        # if the list isn't configured to do this.
-        list_tag=Qemu-devel
-        
-        # The git repository to use to determine which patches are committed.
-        # It must have remotes configured for all subtrees and must be kept up
-        # to date independently of patches.  See hooks.scan.pre
-        git_dir=/home/aliguori/patches/qemu.git
-        # The refspec that's considered the 'master' branch
-        master_branch=origin/master
-        
-        # The notmuch database that holds mail.  It must be kept up to date
-        # independently of patches
-        notmuch_dir=/home/aliguori/patches/mail
-        # The query used to identify mail.  This is meant to allow a single
-        # notmuch database to be used for multiple lists.
-        mail_query=to:qemu-devel@nongnu.org
-        # The number of days to limit the analysis to.
-        search_days=30
-        
-        [hooks]
-        # A program to execute before 'patches scan' starts.  This can be used
-        # to update notmuch and to fetch new commits from git.
-        scan.pre=/home/aliguori/.patches/hooks/scan-pre
-        
-        # All subtrees need an entry in the [trees] section.  The key is the
-        # refspec within the git repository for the subtree and the value is
-        # a URI to be interpolated with the git commit hash for a web-view URL
-        [trees]
-        origin/master=http://git.qemu.org/?p=qemu.git;a=commit;h=%s
-        stefanha/trivial-patches=http://github.com/stefanha/qemu/commit/%s
-        ...
+    [scan]
+    # The tag that mailman prepends to all messages.  This can be omitted
+    # if the list isn't configured to do this.
+    list_tag=Qemu-devel
+    
+    # The git repository to use to determine which patches are committed.
+    # It must have remotes configured for all subtrees and must be kept up
+    # to date independently of patches.  See hooks.scan.pre
+    git_dir=/home/aliguori/patches/qemu.git
+    # The refspec that's considered the 'master' branch
+    master_branch=origin/master
+    
+    # The notmuch database that holds mail.  It must be kept up to date
+    # independently of patches
+    notmuch_dir=/home/aliguori/patches/mail
+    # The query used to identify mail.  This is meant to allow a single
+    # notmuch database to be used for multiple lists.
+    mail_query=to:qemu-devel@nongnu.org
+    # The number of days to limit the analysis to.
+    search_days=30
+    
+    [hooks]
+    # A program to execute before 'patches scan' starts.  This can be used
+    # to update notmuch and to fetch new commits from git.
+    scan.pre=/home/aliguori/.patches/hooks/scan-pre
+    
+    # All subtrees need an entry in the [trees] section.  The key is the
+    # refspec within the git repository for the subtree and the value is
+    # a URI to be interpolated with the git commit hash for a web-view URL
+    [trees]
+    origin/master=http://git.qemu.org/?p=qemu.git;a=commit;h=%s
+    stefanha/trivial-patches=http://github.com/stefanha/qemu/commit/%s
+    ...
 
 After patches is configured, you can simply run '''patches scan''' to create
 the database.  The results will be stored in '''~/.patches/public''' which can
 then be published via HTTP or FTP.
 
-== Notifying on Commits ==
+Notifying on Commits
+--------------------
 
 To use the '''notify''' command, you need to add the following stanzas to your
 '''~/.patchesrc''' file:
 
-        [notify]
-        default_sender=Your Name <your@email.com>
-        smtp_server=your.smtp.server.com
-        events=pulled;committed
+    [notify]
+    default_sender=Your Name <your@email.com>
+    smtp_server=your.smtp.server.com
+    events=pulled;committed
 
 This will send out notifications when patches detects that you have committed
 a patch or pulled a pull request.
