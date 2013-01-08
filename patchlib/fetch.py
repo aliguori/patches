@@ -43,10 +43,10 @@ def main(args):
 
         fp = urlopen(base + '/' + series['mbox_path'])
         try:
-            data = fp.read()
+            mbox_data = fp.read()
         finally:
             fp.close()
 
-        replace_file(mbox.get_real_path(series['mbox_path']), data)
+        replace_file(mbox.get_real_path(series['mbox_path']), mbox_data)
 
     replace_file(config.get_json_path(), json_data)
