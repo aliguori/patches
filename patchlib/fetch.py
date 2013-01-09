@@ -18,7 +18,7 @@ import os
 def build_hash_table(patches):
     table = {}
 
-    for series in patches:
+    for series in patches['patches']:
         if 'mbox_hash' in series:
             table[series['mbox_path']] = series['mbox_hash']
 
