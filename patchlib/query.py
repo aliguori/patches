@@ -99,12 +99,27 @@ def parse_query(query):
 
     return i, terms
 
-def eval_query_term(series, term):
+def eval_messages(series, fn, scope):
+    ret = False
+    for message in series['messages']:
+        if fn(message):
+            ret = True
+            if scope == 'any':
+                break
+        else:
+            return False
+    return ret
+
+def eval_query_term(series, term, scope):
     ret = False
 
-    if term.startswith('status:'):
-        _, status = term.split(':', 1)
-        status = status.lower()
+    if term.find(':') != -1:
+        command, args = term.split(':', 1)
+    else:
+        command = None
+
+    if command == 'status':
+        status = args.lower()
 
         if status == 'broken':
             ret = is_broken(series)
@@ -126,63 +141,54 @@ def eval_query_term(series, term):
             ret = is_reviewed(series)
         else:
             raise Exception("Unknown status `%s'" % status)
-    elif term.startswith('from:'):
-        _, addr = term.split(':', 1)
-        for message in series['messages']:
-            if match_email_address(message['from'], addr):
-                ret = True
-                break
+    elif command == 'from':
+        def fn(msg):
+            return match_email_address(msg['from'], args)
+        ret = eval_messages(series, fn, scope)
     elif term.startswith('to:'):
-        _, addr = term.split(':', 1)
-        for message in series['messages']:
-            for to in message['to']:
-                if match_email_address(to, addr):
-                    ret = True
-                    break
-            if ret:
-                break
-
-            for cc in message['cc']:
-                if match_email_address(cc, addr):
-                    ret = True
-                    break
-            if ret:
-                break
+        def fn(msg):
+            for to in msg['to'] + msg['cc']:
+                if match_email_address(to, args):
+                    return True
+            return False
+        ret = eval_messages(series, fn, scope)
     else:
-        for message in series['messages']:
-            if message['subject'].lower().find(term.lower()) != -1:
-                ret = True
-                break
+        def fn(msg):
+            return msg['subject'].lower().find(args.lower()) != -1
+        ret = eval_messages(series, fn, scope)
+
     return ret, None
 
-def eval_unary_query(series, terms):
+def eval_unary_query(series, terms, scope):
     if type(terms) == list:
         if len(terms) == 0:
             return ret, None
+        elif terms[0] in ['any', 'all']:
+            return eval_query(series, terms[1], terms[0])[0], terms[2:]
         elif terms[0] == 'not':
-            return not eval_query(series, terms[1])[0], terms[2:]
+            return not eval_query(series, terms[1], scope)[0], terms[2:]
         else:
-            return eval_query(series, terms[0])[0], terms[1:]
+            return eval_query(series, terms[0], scope)[0], terms[1:]
     else:
-        return eval_query_term(series, terms)
+        return eval_query_term(series, terms, scope)
     
-def eval_binop_query(series, terms):
-    lhs, rest = eval_unary_query(series, terms)
+def eval_binop_query(series, terms, scope):
+    lhs, rest = eval_unary_query(series, terms, scope)
     if not rest:
         return lhs, rest
 
     if rest[0] == 'and':
-        rhs, rest = eval_binop_query(series, rest[1:])
+        rhs, rest = eval_binop_query(series, rest[1:], scope)
         return lhs and rhs, rest
     elif rest[0] == 'or':
-        rhs, rest = eval_binop_query(series, rest[1:])
+        rhs, rest = eval_binop_query(series, rest[1:], scope)
         return lhs or rhs, rest
     else:
-        rhs, rest = eval_binop_query(series, rest)
+        rhs, rest = eval_binop_query(series, rest, scope)
         return lhs and rhs, rest
 
-def eval_query(series, terms):
-    return eval_binop_query(series, terms)
+def eval_query(series, terms, scope='any'):
+    return eval_binop_query(series, terms, scope)
 
 def find_subseries(patches, args):
     sub_series = []

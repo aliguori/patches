@@ -51,9 +51,13 @@ The fetch command should be run whenever you want to refresh the patch database.
 Search Language
 ---------------
 
-The query language supported by patches support boolean operators "and", "or",
-and "not".  Paranthesis and string quotation is also supported.  Terms are
-matched using substring search within the subject.
+The query language supported by patches support boolean operators: "and" and
+"or", and unary operators: "not", "any", and "all".  Paranthesis and string
+quotation is also supported.  Terms are matched using substring search within
+the subject.
+
+The "any" and "all" operators change whether the search term applies to at least
+one of the messages in a thread or all messages in a thread.
 
 Special terms have a prefix and can be used to search against other parameters
 than subject text.  The following prefixes are supported:
