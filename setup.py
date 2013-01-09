@@ -5,5 +5,6 @@ setup(name='patches',
                   'patchlib.data', 'patchlib.fetch', 'patchlib.gitcmd',
                   'patchlib.hooks', 'patchlib.mbox', 'patchlib.message',
                   'patchlib.notify', 'patchlib.query', 'patchlib.scan',
-                  'patchlib.series', 'patchlib.util', 'patchlib.init'],
+                  'patchlib.series', 'patchlib.util', 'patchlib.init',
+                  'patchlib.list'],
       scripts=['patches'])

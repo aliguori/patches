@@ -12,7 +12,7 @@
 #
 
 from argparse import ArgumentParser
-from patchlib import config, data, query
+from patchlib import config
 
 def do_scan(args):
     from patchlib import scan
@@ -23,19 +23,8 @@ def do_notify(args):
     return notify.main(args)
 
 def do_list(args):
-    with open(config.get_json_path(), 'rb') as fp:
-        patches = data.parse_json(fp.read())
-
-    if args.format == 'notmuch':
-        query.dump_notmuch_query(patches, args)
-    elif args.format == 'oneline':
-        query.dump_oneline_query(patches, args)
-    elif args.format == 'full':
-        query.dump_full_query(patches, args)
-    else:
-        raise Exception('unknown output type %s' % args.output)
-
-    return 0
+    from patchlib import list
+    return list.main(args)
 
 def do_fetch(args):
     from patchlib import fetch
