@@ -70,9 +70,12 @@ def get_hash(mbox_path):
     with open(get_real_path(mbox_path), 'r') as fp:
         data = fp.read()
 
-    # The first line contains a date from the mailer which changes whenever
-    # the mbox is regenerated.  Drop it from the hash calculation
-    _, data = data.split('\n', 1)
+    # The first line of each message contains a date from the mailer which
+    # changes whenever the mbox is regenerated.  Drop it from the hash
+    # calculation
+    def fn(line):
+        return not line.startswith('From MAILER-DAEMON ')
+    data = '\n'.join(filter(fn, data.split('\n')))
 
     h = hashlib.sha1()
     h.update(data)
