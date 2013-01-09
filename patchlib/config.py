@@ -136,5 +136,10 @@ def get_notify_events():
         return events.split(';')
     return []
 
+def get_fetch_url():
+    if ini.has_option('fetch', 'url'):
+        return ini.get('fetch', 'url')
+    return None
+
 def set(section, item, value):
     init.set(section, item, value)

@@ -82,7 +82,7 @@ def main(args):
 
     subparser = subparsers.add_parser('fetch',
                                       help='Fetch patch info from remote server')
-    subparser.add_argument('url', type=str, help='URL of remote JSON file')
+    subparser.add_argument('url', type=str, nargs='?', help='URL of remote JSON file')
     subparser.set_defaults(func=do_fetch)
 
     subparser = subparsers.add_parser('apply',

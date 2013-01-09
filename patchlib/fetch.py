@@ -25,6 +25,11 @@ def build_hash_table(patches):
     return table
 
 def main(args):
+    if not args.url:
+        args.url = config.get_fetch_url()
+
+    if not args.url:
+        raise Exception('URL not specified in config file and missing on command line')
     url = args.url
 
     try:
