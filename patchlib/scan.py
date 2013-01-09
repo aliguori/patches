@@ -197,6 +197,7 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
                 tags = {}
 
             series['mbox_path'] = mbox.generate_mbox(message_list, tags)
+            series['mbox_hash'] = mbox.get_hash(series['mbox_path'])
 
         patches.append(series)
 
@@ -220,8 +221,7 @@ def main(args):
     patches.sort(sort_patch)
 
     info = { 'version': data.VERSION,
-             'patches': patches,
-             'timestamp': long(time()) }
+             'patches': patches }
 
     replace_file(config.get_json_path(),
                  json.dumps(info, indent=2,

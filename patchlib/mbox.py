@@ -10,7 +10,7 @@
 # See the COPYING file in the top-level directory.
 #
 
-import shutil, os, mailbox
+import shutil, os, mailbox, hashlib
 import config
 from message import merge_tags, parse_tag
 
@@ -65,3 +65,10 @@ def generate_mbox(messages, full_tags):
 
 def get_real_path(mbox_path):
     return '%s/%s' % (config.get_mbox_path(), mbox_path[len(config.get_mbox_prefix()):])
+
+def get_hash(mbox_path):
+    with open(get_real_path(mbox_path), 'r') as fp:
+        data = fp.read()
+    h = hashlib.sha1()
+    h.update(data)
+    return h.hexdigest()
