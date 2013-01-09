@@ -145,12 +145,16 @@ def eval_query_term(series, term, scope):
         def fn(msg):
             return match_email_address(msg['from'], args)
         ret = eval_messages(series, fn, scope)
-    elif term.startswith('to:'):
+    elif command == 'to':
         def fn(msg):
             for to in msg['to'] + msg['cc']:
                 if match_email_address(to, args):
                     return True
             return False
+        ret = eval_messages(series, fn, scope)
+    elif command == 'id':
+        def fn(msg):
+            return msg['message-id'] == args
         ret = eval_messages(series, fn, scope)
     else:
         def fn(msg):
