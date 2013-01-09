@@ -220,7 +220,8 @@ def main(args):
     patches.sort(sort_patch)
 
     info = { 'version': data.VERSION,
-             'patches': patches }
+             'patches': patches,
+             'timestamp': long(time()) }
 
     replace_file(config.get_json_path(),
                  json.dumps(info, indent=2,

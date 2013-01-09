@@ -23,6 +23,13 @@ def main(args):
     except Exception, e:
         pass
 
+    try:
+        with open(config.get_json_path(), 'r') as fp:
+            json_data = fp.read()
+        old_patches = data.parse_json(json_data, full=True)
+    except Exception, e:
+        old_patches = {}
+
     fp = urlopen(url)
     try:
         json_data = fp.read()
@@ -30,6 +37,10 @@ def main(args):
         fp.close()
 
     patches = data.parse_json(json_data)
+    if ('timestamp' in old_patches and 'timestamp' in patches and 
+        old_patches['timestamp'] == patches['timestamp']):
+        print 'No changes found.'
+        return 0
 
     print 'Fetched info on %d patch series' % len(patches)
     print 'Fetching mboxes...'
