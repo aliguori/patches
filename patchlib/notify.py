@@ -14,14 +14,14 @@ import email.message, email.utils
 import os, smtplib, time
 import config, data
 from series import *
-from email.charset import Charset
+from email.header import Header
 
 def format_addr(addr):
     name = addr['name']
 
     # This seems like a python bug to me...
     if name.encode('ascii', errors='replace') != name:
-        name = Charset('utf-8').header_encode(addr['name'])
+        name = str(Header().append(addr['name']))
 
     return email.utils.formataddr((name, addr['email']))
 
@@ -144,7 +144,7 @@ def notify_patches(args, patches, notified_dir, whitelist):
     events = config.get_notify_events()
 
     for series in patches:
-        if is_broken(series) or is_obsolete(series) or is_rfc(series) or has_subject_tags(series):
+        if is_obsolete(series) or is_rfc(series) or has_subject_tags(series):
             pass
         elif is_pull_request(series):
             if 'pulled' not in events:
@@ -191,6 +191,11 @@ def notify_patches(args, patches, notified_dir, whitelist):
                 f.close()
 
             send_pull_response(args, notified_dir, series['messages'][0], committer)
+        elif is_broken(series):
+            # Pull requests are often 'broken' because not everyone marks the
+            # 0ths patch correctly.  Be a little more tolerant of broken pull
+            # requests but certainly not patch series.
+            pass
         elif is_committed(series):
             if 'committed' not in events:
                 continue
