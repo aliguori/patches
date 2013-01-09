@@ -11,12 +11,35 @@
 #
 
 from ConfigParser import RawConfigParser
-import os.path, email.utils
+import os.path, email.utils, os
 
 ini = RawConfigParser()
+config_filename = None
 
-def setup(*args):
-    ini.read(args)
+def setup(filename):
+    global config_filename
+
+    if not filename:
+        dirs = os.getcwd().split('/')
+        for i in range(0, len(dirs)):
+            if i:
+                path = '/'.join(dirs[0:-i])
+            else:
+                path = '/'.join(dirs)
+
+            path += '/.patchesrc'
+
+            if os.access(path, os.R_OK):
+                filename = path
+                break
+
+        if not filename:
+            filename = os.path.expanduser('~/.patchesrc')
+    elif filename[0] != '/':
+        filename = os.getcwd() + '/' + filename
+
+    config_filename = filename
+    ini.read(filename)
 
 def get_list_tag():
     if ini.has_option('scan', 'list_tag'):
@@ -46,7 +69,7 @@ def get_notified_dir():
 def get_patches_dir():
     if ini.has_option('options', 'patches_dir'):
         return ini.get('options', 'patches_dir')
-    return os.path.expanduser('~/.patches')
+    return config_filename.rsplit('/', 1)[0] + '/.patches'
 
 def get_json_path():
     if ini.has_option('options', 'json_path'):

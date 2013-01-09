@@ -55,7 +55,6 @@ def main(args):
 
     parser = ArgumentParser()
     parser.add_argument('--config', type=str,
-                        default=os.path.expanduser('~/.patchesrc'),
                         help='Path to configuration file')
 
     subparsers = parser.add_subparsers(title='Subcommands',
@@ -92,7 +91,6 @@ def main(args):
     subparser.set_defaults(func=do_apply)
 
     args = parser.parse_args(args)
-
     config.setup(args.config)
     return args.func(args)
 
