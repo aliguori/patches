@@ -142,4 +142,6 @@ def get_fetch_url():
     return None
 
 def set(section, item, value):
-    init.set(section, item, value)
+    if not ini.has_section(section):
+        ini.add_section(section)
+    ini.set(section, item, value)

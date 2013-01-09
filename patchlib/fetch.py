@@ -17,11 +17,16 @@ import os
 
 def main(args):
     if not args.url:
-        args.url = config.get_fetch_url()
+        fetch()
+    else:
+        fetch(args.url[0])
 
-    if not args.url:
+def fetch(url=None):
+    if not url:
+        url = config.get_fetch_url()
+
+    if not url:
         raise Exception('URL not specified in config file and missing on command line')
-    url = args.url
 
     try:
         os.makedirs(config.get_mbox_path())

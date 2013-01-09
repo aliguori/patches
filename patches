@@ -45,6 +45,10 @@ def do_apply(args):
     from patchlib import apply
     return apply.main(args)
 
+def do_init(args):
+    from patchlib import init
+    return init.main(args)
+
 def strlist(value):
     if value.find(';') == -1:
         return [value]
@@ -60,6 +64,11 @@ def main(args):
     subparsers = parser.add_subparsers(title='Subcommands',
                                        description='Valid subcommands',
                                        help='Subcommand help')
+
+    subparser = subparsers.add_parser('init',
+                                      help='Create a new patches configuration in the current directory')
+    subparser.add_argument('url', type=str, nargs='*', help='URL of remote JSON file')
+    subparser.set_defaults(func=do_init)
 
     subparser = subparsers.add_parser('scan',
                                       help='Scan mailing list for patches')

@@ -67,7 +67,11 @@ def get_real_path(mbox_path):
     return '%s/%s' % (config.get_mbox_path(), mbox_path[len(config.get_mbox_prefix()):])
 
 def get_hash(mbox_path):
-    with open(get_real_path(mbox_path), 'r') as fp:
+    real_path = get_real_path(mbox_path)
+    if not os.access(real_path, os.R_OK):
+        return None
+
+    with open(real_path, 'r') as fp:
         data = fp.read()
 
     # The first line of each message contains a date from the mailer which
