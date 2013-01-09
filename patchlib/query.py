@@ -42,6 +42,11 @@ def out(*args):
     else:
         print encode(fmt)
 
+def match_flat_email_address(lhs, rhs):
+    val = {}
+    val['name'], val['email'] = email.utils.parseaddr(lhs)
+    return match_email_address(val, rhs)
+
 def match_email_address(lhs, rhs):
     lhs_name = lhs['name'].lower()
     lhs_email = lhs['email'].lower()
@@ -99,10 +104,13 @@ def parse_query(query):
 
     return i, terms
 
-def eval_messages(series, fn, scope):
+def eval_messages(series, fn, scope, cover=True):
     ret = False
-    for message in series['messages']:
-        if fn(message):
+    for msg in series['messages']:
+        if not cover and message.is_cover(msg):
+            continue
+
+        if fn(msg):
             ret = True
             if scope == 'any':
                 break
@@ -156,9 +164,25 @@ def eval_query_term(series, term, scope):
         def fn(msg):
             return msg['message-id'] == args
         ret = eval_messages(series, fn, scope)
+    elif command != None:
+        command = message.format_tag_name(command)
+        email_tags = config.get_email_tags()
+
+        def fn(msg):
+            if command not in msg['tags']:
+                return False
+            if not args:
+                return True
+            if command in email_tags:
+                for addr in msg['tags'][command]:
+                    if match_flat_email_address(addr, args):
+                        return True
+                return False
+            return args in msg['tags'][command]
+        ret = eval_messages(series, fn, scope, cover=False)
     else:
         def fn(msg):
-            return msg['subject'].lower().find(args.lower()) != -1
+            return msg['subject'].lower().find(term.lower()) != -1
         ret = eval_messages(series, fn, scope)
 
     return ret, None
@@ -182,6 +206,7 @@ def eval_binop_query(series, terms, scope):
         return lhs, rest
 
     if rest[0] == 'and':
+        # FIXME: improve the parsing so that we don't have to return rest here
         rhs, rest = eval_binop_query(series, rest[1:], scope)
         return lhs and rhs, rest
     elif rest[0] == 'or':

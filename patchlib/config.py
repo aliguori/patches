@@ -128,18 +128,28 @@ def get_hook(name):
         return ini.get('hooks', name)
     return None
 
+def parse_list(value):
+    if value.find(';') == -1:
+        return [value]
+    return value.split(';')
+
 def get_notify_events():
     if ini.has_option('notify', 'events'):
-        events = ini.get('notify', 'events')
-        if events.find(';') == -1:
-            return [events]
-        return events.split(';')
+        return parse_list(ini.get('notify', 'events'))
     return []
 
 def get_fetch_url():
     if ini.has_option('fetch', 'url'):
         return ini.get('fetch', 'url')
     return None
+
+EMAIL_TAGS = ['Reviewed-by', 'Tested-by', 'Acked-by', 'Nacked-by',
+              'Reported-by', 'Signed-off-by', 'Rejected-by']
+
+def get_email_tags():
+    if ini.has_option('options', 'email-tags'):
+        return parse_list(ini.get('options', 'email-tags'))
+    return EMAIL_TAGS
 
 def set(section, item, value):
     if not ini.has_section(section):

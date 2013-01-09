@@ -71,6 +71,10 @@ than subject text.  The following prefixes are supported:
 - ''status:reviewed'' show series where every patch has at least one Reviewed-by
 - ''to:ADDRESS'' show series where '''ADDRESS''' is on the receipent list
 - ''from:ADDRESS'' show series where '''ADDRESS''' is the sender
+- ''reviewed-by:ADDRESS'' show series if a patch has a Reviewed-by by ADDRESS
+- ''tested-by:ADDRESS'' show series if a patch has a Tested-by by ADDRESS
+- ''nacked-by:ADDRESS'' show series if a patch has a Nacked-by by ADDRESS
+- ''acked-by:ADDRESS'' show series if a patch has a Acked-by by ADDRESS
 
 Query Examples
 --------------
