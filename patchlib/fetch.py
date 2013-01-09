@@ -15,15 +15,6 @@ from util import *
 import config, mbox, data
 import os
 
-def build_hash_table(patches):
-    table = {}
-
-    for series in patches['patches']:
-        if 'mbox_hash' in series:
-            table[series['mbox_path']] = series['mbox_hash']
-
-    return table
-
 def main(args):
     if not args.url:
         args.url = config.get_fetch_url()
@@ -36,15 +27,6 @@ def main(args):
         os.makedirs(config.get_mbox_path())
     except Exception, e:
         pass
-
-    try:
-        with open(config.get_json_path(), 'r') as fp:
-            json_data = fp.read()
-        old_patches = data.parse_json(json_data, full=True)
-    except Exception, e:
-        old_patches = { 'patches': [] }
-
-    old_hash_table = build_hash_table(old_patches)
 
     fp = urlopen(url)
     try:
@@ -63,9 +45,9 @@ def main(args):
 
         mbox_path = series['mbox_path']
 
-        if ('mbox_hash' in series and
-            mbox_path in old_hash_table and
-            old_hash_table[mbox_path] == series['mbox_hash']):
+        old_hash = mbox.get_hash(mbox_path)
+        
+        if 'mbox_hash' in series and series['mbox_hash'] == old_hash:
             continue
 
         print 'Fetching mbox for %s' % series['messages'][0]['subject']
