@@ -60,7 +60,7 @@ def match_email_address(lhs, rhs):
 
     return False
 
-def parse_query(query):
+def tokenize_query(query):
     terms = []
 
     i = 0
@@ -76,24 +76,13 @@ def parse_query(query):
                 raise Exception("Unterminated string '%s'" % query[start:])
 
             term += query[(start + 1):i]
-        elif query[i] in ' \t':
-            if term:
-                terms.append(term)
-                term = ''
-        elif query[i] == '(':
+        elif query[i] in ' \t()':
             if term:
                 terms.append(term)
                 term = ''
 
-            i += 1
-            delta, subterms = parse_query(query[i:])
-            terms.append(subterms)
-            i += delta
-        elif query[i] == ')':
-            if term:
-                terms.append(term)
-                term = ''
-            return i, terms
+            if query[i] in '()':
+                terms.append(query[i])
         else:
             term += query[i]
         i += 1
@@ -102,7 +91,40 @@ def parse_query(query):
         terms.append(term)
         term = ''
 
-    return i, terms
+    return terms
+
+def parse_query_unary(terms):
+    if type(terms) == list:
+        if terms[0] == '(':
+            query, rest = parse_query(terms[1:])
+            if rest[0] != ')':
+                raise Exception('Expected paranthesis, got %s' % rest[0])
+            return ['quote', query], rest[1:]
+        elif terms[0] in ['any', 'all', 'not']:
+            return [terms[0], parse_query(terms[1])[0]], terms[2:]
+        else:
+            return parse_query(terms[0])[0], terms[1:]
+    else:
+        return ['term', terms ], None
+
+def parse_query_binop(terms):
+    lhs, rest = parse_query_unary(terms)
+    if not rest or rest[0] == ')':
+        return lhs, rest
+
+    if rest[0] in ['and', 'or']:
+        rhs, rest_ = parse_query_binop(rest[1:])
+        if rhs == []:
+            return lhs, rest_
+        return [rest[0], lhs, rhs], rest_
+    else:
+        rhs, rest = parse_query_binop(rest)
+        if rhs == []:
+            return lhs, rest
+        return ['and', lhs, rhs], rest
+
+def parse_query(terms):
+    return parse_query_binop(terms)
 
 def eval_messages(series, fn, scope, cover=True):
     ret = False
@@ -119,8 +141,6 @@ def eval_messages(series, fn, scope, cover=True):
     return ret
 
 def eval_query_term(series, term, scope):
-    ret = False
-
     if term.find(':') != -1:
         command, args = term.split(':', 1)
     else:
@@ -130,40 +150,40 @@ def eval_query_term(series, term, scope):
         status = args.lower()
 
         if status == 'broken':
-            ret = is_broken(series)
+            return is_broken(series)
         elif status == 'obsolete':
-            ret = is_obsolete(series)
+            return is_obsolete(series)
         elif status == 'pull-request':
-            ret = is_pull_request(series)
+            return is_pull_request(series)
         elif status == 'rfc':
-            ret = is_rfc(series)
+            return is_rfc(series)
         elif status == 'unapplied':
-            ret = not (is_broken(series) or
+            return not (is_broken(series) or
                        is_obsolete(series) or
                        is_pull_request(series) or
                        is_rfc(series) or
                        is_committed(series))
         elif status == 'committed':
-            ret = is_committed(series)
+            return is_committed(series)
         elif status == 'reviewed':
-            ret = is_reviewed(series)
+            return is_reviewed(series)
         else:
             raise Exception("Unknown status `%s'" % status)
     elif command == 'from':
         def fn(msg):
             return match_email_address(msg['from'], args)
-        ret = eval_messages(series, fn, scope)
+        return eval_messages(series, fn, scope)
     elif command == 'to':
         def fn(msg):
             for to in msg['to'] + msg['cc']:
                 if match_email_address(to, args):
                     return True
             return False
-        ret = eval_messages(series, fn, scope)
+        return eval_messages(series, fn, scope)
     elif command == 'id':
         def fn(msg):
             return msg['message-id'] == args
-        ret = eval_messages(series, fn, scope)
+        return eval_messages(series, fn, scope)
     elif command != None:
         command = message.format_tag_name(command)
         email_tags = config.get_email_tags()
@@ -179,52 +199,36 @@ def eval_query_term(series, term, scope):
                         return True
                 return False
             return args in msg['tags'][command]
-        ret = eval_messages(series, fn, scope, cover=False)
+        return eval_messages(series, fn, scope, cover=False)
     else:
         def fn(msg):
             return msg['subject'].lower().find(term.lower()) != -1
-        ret = eval_messages(series, fn, scope)
-
-    return ret, None
-
-def eval_unary_query(series, terms, scope):
-    if type(terms) == list:
-        if len(terms) == 0:
-            return ret, None
-        elif terms[0] in ['any', 'all']:
-            return eval_query(series, terms[1], terms[0])[0], terms[2:]
-        elif terms[0] == 'not':
-            return not eval_query(series, terms[1], scope)[0], terms[2:]
-        else:
-            return eval_query(series, terms[0], scope)[0], terms[1:]
-    else:
-        return eval_query_term(series, terms, scope)
-    
-def eval_binop_query(series, terms, scope):
-    lhs, rest = eval_unary_query(series, terms, scope)
-    if not rest:
-        return lhs, rest
-
-    if rest[0] == 'and':
-        # FIXME: improve the parsing so that we don't have to return rest here
-        rhs, rest = eval_binop_query(series, rest[1:], scope)
-        return lhs and rhs, rest
-    elif rest[0] == 'or':
-        rhs, rest = eval_binop_query(series, rest[1:], scope)
-        return lhs or rhs, rest
-    else:
-        rhs, rest = eval_binop_query(series, rest, scope)
-        return lhs and rhs, rest
+        return eval_messages(series, fn, scope)
 
 def eval_query(series, terms, scope='any'):
-    return eval_binop_query(series, terms, scope)
+    if terms[0] == 'and':
+        return eval_query(series, terms[1], scope) and eval_query(series, terms[2], scope)
+    elif terms[0] == 'or':
+        return eval_query(series, terms[1], scope) or eval_query(series, terms[2], scope)
+    elif terms[0] == 'quote':
+        return eval_query(series, terms[1], scope)
+    elif terms[0] in ['any', 'all']:
+        return eval_query(series, terms[1], terms[0])
+    elif terms[0] == 'not':
+        return not eval_query(series, terms[1], scope)
+    elif terms[0] == 'term':
+        return eval_query_term(series, terms[1], scope)
+    else:
+        raise Exception('Unexpected node type')
 
 def find_subseries(patches, args):
     sub_series = []
 
-    query = parse_query(' '.join(args.query))[1]
+    tokens = tokenize_query(' '.join(args.query))
+    query, _ = parse_query(tokens)
+    
     for series in patches:
-        if not eval_query(series, query)[0]:
+        if not eval_query(series, query):
             continue
     
         sub_series.append(series)
@@ -266,3 +270,8 @@ def dump_full_query(patches, args):
             ret = message.decode_subject_text(msg['subject'])
             out('   [%s/%s] %s', ret['n'], ret['m'], ret['subject'])
         out()
+
+if __name__ == '__main__':
+    a = '(a (b)) any c'
+    t = tokenize_query(a)
+    print parse_query(t)
