@@ -38,6 +38,14 @@ def do_init(args):
     from patchlib import init
     return init.main(args)
 
+def do_nntp_setup(args):
+    from patchlib import nntp
+    return nntp.setup(args)
+
+def do_nntp_refresh(args):
+    from patchlib import nntp
+    return nntp.refresh(args)
+
 def strlist(value):
     if value.find(';') == -1:
         return [value]
@@ -87,6 +95,17 @@ def main(args):
                                       help='Apply a patch or pull request')
     subparser.add_argument('mid', type=str, help='Message ID of the leader')
     subparser.set_defaults(func=do_apply)
+
+    subparser = subparsers.add_parser('nntp-setup',
+                                      help='Setup a new database using NNTP')
+    subparser.add_argument('--max-msgs', type=int, default=2000, help='Maximum number of historical messages to fetch')
+    subparser.add_argument('group', type=str, help='NNTP group name to fetch')
+    subparser.add_argument('server', type=str, default='news.gmane.org', nargs='?', help='Name of the NNTP server to use')
+    subparser.set_defaults(func=do_nntp_setup)
+
+    subparser = subparsers.add_parser('nntp-refresh',
+                                      help='Refresh a database using NNTP')
+    subparser.set_defaults(func=do_nntp_refresh)
 
     args = parser.parse_args(args)
     config.setup(args.config)

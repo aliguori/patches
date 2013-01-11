@@ -59,7 +59,9 @@ def get_make_command():
     return ini.get('build', 'make')
 
 def get_notmuch_dir():
-    return ini.get('scan', 'notmuch_dir')
+    if ini.has_option('scan', 'notmuch_dir'):
+        return ini.get('scan', 'notmuch_dir')
+    return get_patches_dir() + '/notmuch'
 
 def get_notified_dir():
     if ini.has_option('options', 'notified_dir'):
@@ -150,6 +152,12 @@ def get_email_tags():
     if ini.has_option('options', 'email-tags'):
         return parse_list(ini.get('options', 'email-tags'))
     return EMAIL_TAGS
+
+def get_nntp_server():
+    return ini.get('nntp', 'server')
+
+def get_nntp_group():
+    return ini.get('nntp', 'group')
 
 def set(section, item, value):
     if not ini.has_section(section):

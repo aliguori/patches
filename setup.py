@@ -6,5 +6,5 @@ setup(name='patches',
                   'patchlib.hooks', 'patchlib.mbox', 'patchlib.message',
                   'patchlib.notify', 'patchlib.query', 'patchlib.scan',
                   'patchlib.series', 'patchlib.util', 'patchlib.init',
-                  'patchlib.list'],
+                  'patchlib.list', 'patchlib.nntp'],
       scripts=['patches'])

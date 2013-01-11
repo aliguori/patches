@@ -12,7 +12,7 @@
 
 import os
 
-def replace_file(filename, data):
+def backup_file(filename):
     backup = "%s~" % filename
     if filename.find('/') != -1:
         parts = filename.split('/')
@@ -27,6 +27,19 @@ def replace_file(filename, data):
                 outfp.write(infp.read())
     except Exception, e:
         pass
+
+    return tmp_filename
+
+def replace_cfg(filename, ini):
+    tmp_filename = backup_file(filename)
+
+    with open(tmp_filename, 'wb') as fp:
+        ini.write(fp)
+
+    os.rename(tmp_filename, filename)
+
+def replace_file(filename, data):
+    tmp_filename = backup_file(filename)
 
     with open(tmp_filename, 'wb') as fp:
         fp.write(data)
