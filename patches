@@ -99,6 +99,10 @@ def main(args):
     subparser = subparsers.add_parser('nntp-setup',
                                       help='Setup a new database using NNTP')
     subparser.add_argument('--max-msgs', type=int, default=2000, help='Maximum number of historical messages to fetch')
+    subparser.add_argument('--list-tag', type=str, help='The list tag used by this mailing list')
+    subparser.add_argument('--search-days', type=int, default=30, help='Number of days of historical patches to consider')
+    subparser.add_argument('--master-branch', type=str, default='master', help='Git branch to examine for commits')
+    subparser.add_argument('url', type=str, help='Git URL to fetch')
     subparser.add_argument('group', type=str, help='NNTP group name to fetch')
     subparser.add_argument('server', type=str, default='news.gmane.org', nargs='?', help='Name of the NNTP server to use')
     subparser.set_defaults(func=do_nntp_setup)

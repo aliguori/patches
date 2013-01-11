@@ -47,7 +47,9 @@ def get_list_tag():
     return ''
 
 def get_git_dir():
-    return ini.get('scan', 'git_dir') + '/.git'
+    if ini.has_option('scan', 'git_dir'):
+        return ini.get('scan', 'git_dir') + '/.git'
+    return get_patches_dir() + '/git'
 
 def get_git_wd_dir():
     return ini.get('scan', 'git_dir')
@@ -79,10 +81,14 @@ def get_json_path():
     return get_patches_dir() + '/public/patches.json'
 
 def get_mail_query():
-    return ini.get('scan', 'mail_query')
+    if ini.has_option('scan', 'mail_query'):
+        return ini.get('scan', 'mail_query')
+    return ''
 
 def get_search_days():
-    return int(ini.get('scan', 'search_days'))
+    if ini.has_option('scan', 'search_days'):
+        return int(ini.get('scan', 'search_days'))
+    return 30
 
 def get_trees():
     trees = {}

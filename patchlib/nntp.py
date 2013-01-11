@@ -13,6 +13,7 @@
 import nntplib, email, datetime, notmuch, mailbox, os
 from ConfigParser import RawConfigParser
 import config, util, sys
+from subprocess import check_call
 
 def fetch_msg(self, num):
     _, _, _, head = self.head(str(num))
@@ -21,6 +22,17 @@ def fetch_msg(self, num):
 
 def setup(args):
     maildir = config.get_notmuch_dir()
+    git_dir = config.get_git_dir()
+
+    try:
+        os.makedirs(git_dir.rsplit('/', 1)[0])
+    except Exception, e:
+        pass
+
+    git = ['git', '--git-dir=%s' % git_dir]
+
+    check_call(git + ['init', '--bare'])
+    check_call(git + ['remote', 'add', 'origin', args.url])
 
     try:
         os.makedirs(maildir.rsplit('/', 1)[0])
@@ -38,9 +50,16 @@ def setup(args):
 
     ini = RawConfigParser()
     ini.read([config.config_filename])
+
     ini.add_section('nntp')
     ini.set('nntp', 'server', args.server)
     ini.set('nntp', 'group', args.group)
+
+    ini.add_section('scan')
+    if args.list_tag:
+        ini.set('scan', 'list_tag', args.list_tag)
+    if args.search_days:
+        ini.set('scan', 'search_days', str(args.search_days))
     util.replace_cfg(config.config_filename, ini)
 
     return 0
