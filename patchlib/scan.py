@@ -133,7 +133,7 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
     now = long(time())
     then = now - days_to_seconds(search_days)
 
-    query = '%s subject:PATCH %s..%s' % (mail_query, then, now)
+    query = '%s (subject:PATCH or subject:PULL) %s..%s' % (mail_query, then, now)
     q = notmuch.Query(db, query)
 
     thread_leaders, oldest = find_thread_leaders(q, then)
