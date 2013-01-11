@@ -86,6 +86,7 @@ def dump_full_query(patches, args):
         msg = series['messages'][0]
         out('Message-id: %s', msg['message-id'])
         out('From: %s <%s>', msg['from']['name'], msg['from']['email'])
+        out('Date: %s', msg['date'])
         for msg in series['messages']:
             ret = message.decode_subject_text(msg['subject'])
             out('   [%s/%s] %s', ret['n'], ret['m'], ret['subject'])
