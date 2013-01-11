@@ -165,6 +165,12 @@ def get_nntp_server():
 def get_nntp_group():
     return ini.get('nntp', 'group')
 
+def get(key):
+    section, item = key.split('.', 1)
+    if not ini.has_option(section, item):
+        return None
+    return ini.get(section, item)
+
 def set(section, item, value):
     if not ini.has_section(section):
         ini.add_section(section)

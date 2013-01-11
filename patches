@@ -46,6 +46,15 @@ def do_nntp_refresh(args):
     from patchlib import nntp
     return nntp.refresh(args)
 
+def do_config_get(args):
+    from patchlib import config
+    value = config.get(args.key)
+    if value == None:
+        return 1
+    elif value:
+        print value
+    return 0
+
 def strlist(value):
     if value.find(';') == -1:
         return [value]
@@ -110,6 +119,11 @@ def main(args):
     subparser = subparsers.add_parser('nntp-refresh',
                                       help='Refresh a database using NNTP')
     subparser.set_defaults(func=do_nntp_refresh)
+
+    subparser = subparsers.add_parser('config',
+                                      help='Get a configuration value')
+    subparser.add_argument('key', type=str, help='The key to retrieve')
+    subparser.set_defaults(func=do_config_get)
 
     args = parser.parse_args(args)
     config.setup(args.config)
