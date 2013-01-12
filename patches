@@ -48,12 +48,7 @@ def do_nntp_refresh(args):
 
 def do_config_get(args):
     from patchlib import config
-    value = config.get(args.key)
-    if value == None:
-        return 1
-    elif value:
-        print value
-    return 0
+    return config.main(args)
 
 def strlist(value):
     if value.find(';') == -1:

@@ -41,54 +41,17 @@ def setup(filename):
     config_filename = filename
     ini.read(filename)
 
-def get_list_tag():
-    if ini.has_option('scan', 'list_tag'):
-        return ini.get('scan', 'list_tag')
-    return ''
+def parse_list(value):
+    if value == None:
+        return []
+    elif value.find(';') == -1:
+        return [value]
+    return value.split(';')
 
-def get_git_dir():
-    if ini.has_option('scan', 'git_dir'):
-        return ini.get('scan', 'git_dir') + '/.git'
-    return get_patches_dir() + '/git'
-
-def get_git_wd_dir():
-    return ini.get('scan', 'git_dir')
-
-def get_master_branch():
-    return ini.get('scan', 'master_branch')
-
-def get_make_command():
-    return ini.get('build', 'make')
-
-def get_notmuch_dir():
-    if ini.has_option('scan', 'notmuch_dir'):
-        return ini.get('scan', 'notmuch_dir')
-    return get_patches_dir() + '/notmuch'
-
-def get_notified_dir():
-    if ini.has_option('options', 'notified_dir'):
-        return ini.get('options', 'notified_dir')
-    return get_patches_dir() + '/notified'
-
-def get_patches_dir():
-    if ini.has_option('options', 'patches_dir'):
-        return ini.get('options', 'patches_dir')
-    return config_filename.rsplit('/', 1)[0] + '/.patches'
-
-def get_json_path():
-    if ini.has_option('options', 'json_path'):
-        return ini.get('options', 'json_path')
-    return get_patches_dir() + '/public/patches.json'
-
-def get_mail_query():
-    if ini.has_option('scan', 'mail_query'):
-        return ini.get('scan', 'mail_query')
-    return ''
-
-def get_search_days():
-    if ini.has_option('scan', 'search_days'):
-        return int(ini.get('scan', 'search_days'))
-    return 30
+def option(key):
+    def getter():
+        return get(key)
+    return getter
 
 def get_trees():
     trees = {}
@@ -96,82 +59,90 @@ def get_trees():
         trees[branch] = uri
     return trees
 
-def get_smtp_server():
-    return ini.get('notify', 'smtp_server')
-
-def get_default_sender():
-    return ini.get('notify', 'default_sender')
-
-def get_committer_whitelist():
-    if ini.has_option('notify', 'whitelist'):
-        wl = ini.get('notify', 'whitelist')
-        if wl.find(';') == -1:
-            return [wl]
-        return wl.split(';')
-    else:
-        return [email.utils.parseaddr(get_default_sender())[0]]
-
-def get_build_cache_dir():
-    if ini.has_option('build', 'cache_dir'):
-        return ini.get('build', 'cache_dir')
-    return get_patches_dir() + '/build-cache'
-
-def get_build_working_dir():
-    if ini.has_option('build', 'working_dir'):
-        return ini.get('build', 'working_dir')
-    return get_patches_dir() + '/git-working'
-
-def get_mbox_path():
-    if ini.has_option('apply', 'mbox_path'):
-        return ini.get('apply', 'mbox_path')
-    return get_patches_dir() + '/public/patches'
-
-def get_mbox_prefix():
-    if ini.has_option('apply', 'mbox_prefix'):
-        return ini.get('apply', 'mbox_prefix')
-    return 'patches/'
-
 def get_hook(name):
-    if ini.has_option('hooks', name):
-        return ini.get('hooks', name)
-    return None
-
-def parse_list(value):
-    if value.find(';') == -1:
-        return [value]
-    return value.split(';')
-
-def get_notify_events():
-    if ini.has_option('notify', 'events'):
-        return parse_list(ini.get('notify', 'events'))
-    return []
-
-def get_fetch_url():
-    if ini.has_option('fetch', 'url'):
-        return ini.get('fetch', 'url')
-    return None
-
-EMAIL_TAGS = ['Reviewed-by', 'Tested-by', 'Acked-by', 'Nacked-by',
-              'Reported-by', 'Signed-off-by', 'Rejected-by']
-
-def get_email_tags():
-    if ini.has_option('options', 'email-tags'):
-        return parse_list(ini.get('options', 'email-tags'))
-    return EMAIL_TAGS
-
-def get_nntp_server():
-    return ini.get('nntp', 'server')
-
-def get_nntp_group():
-    return ini.get('nntp', 'group')
+    return get('hooks.%s' % name)
 
 def get(key):
-    section, item = key.split('.', 1)
-    if not ini.has_option(section, item):
-        return None
-    return ini.get(section, item)
+    if key.find('.') == -1:
+        section, item = 'options', key
+        key = '%s.%s' % (section, item)
+    else:
+        section, item = key.split('.', 1)
+
+    if ini.has_option(section, item):
+        value = ini.get(section, item)
+    elif key == 'options.email-tags':
+        value = ';'.join(['Reviewed-by', 'Tested-by', 'Acked-by', 'Nacked-by',
+                          'Reported-by', 'Signed-off-by', 'Rejected-by'])
+    elif key == 'apply.mbox_prefix':
+        value = 'patches/'
+    elif key == 'apply.mbox_path':
+        value = get_patches_dir() + '/public/patches'
+    elif key == 'build.working_dir':
+        value = get_patches_dir() + '/git-working'
+    elif key == 'build.cache_dir':
+        value = get_patches_dir() + '/build-cache'
+    elif key == 'notify.whitelist':
+        value = email.utils.parseaddr(get_default_sender())[0]
+    elif key == 'scan.list_tag':
+        value = ''
+    elif key == 'scan.git_dir':
+        value = get_patches_dir() + '/git'
+    elif key == 'scan.notmuch_dir':
+        value = get_patches_dir() + '/notmuch'
+    elif key == 'options.notified_dir':
+        value = get_patches_dir() + '/notified'
+    elif key == 'options.patches_dir':
+        value = config_filename.rsplit('/', 1)[0] + '/.patches'
+    elif key == 'options.json_path':
+        value = get_patches_dir() + '/public/patches.json'
+    elif key == 'scan.mail_query':
+        value = ''
+    elif key == 'scan.search_days':
+        value = '30'
+    else:
+        value = None
+
+    if key in ['options.email-tags', 'notify.events']:
+        value = parse_list(value)
+    elif key in ['scan.search_days']:
+        value = int(value)
+
+    return value
 
 def set(section, item, value):
     if not ini.has_section(section):
         ini.add_section(section)
     ini.set(section, item, value)
+
+get_list_tag = option('scan.list_tag')
+get_git_dir = option('scan.git_dir')
+get_master_branch = option('scan.master_branch')
+get_notmuch_dir = option('scan.notmuch_dir')
+get_notified_dir = option('options.notified_dir')
+get_patches_dir = option('options.patches_dir')
+get_json_path = option('options.json_path')
+get_mail_query = option('scan.mail_query')
+get_search_days = option('scan.search_days')
+get_smtp_server = option('notify.smtp_server')
+get_default_sender = option('notify.default_sender')
+get_working_dir = option('build.working_dir')
+get_cache_dir = option('build.cache_dir')
+get_committer_whitelist = option('notify.whitelist')
+get_mbox_path = option('apply.mbox_path')
+get_mbox_prefix = option('apply.mbox_prefix')
+get_notify_events = option('notify.events')
+get_fetch_url = option('fetch.url')
+get_email_tags = option('options.email-tags')
+get_nntp_server = option('nntp.server')
+get_nntp_group = option('nntp.group')
+
+def main(args):
+    value = get(args.key)
+    if value == None:
+        return 1
+    elif type(value) == list:
+        print ';'.join(value)
+    elif value:
+        print value
+    return 0
