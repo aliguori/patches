@@ -85,7 +85,10 @@ def decode_subject_text(subject):
                 if index != -1 and is_digit(word[0]) and is_digit(word[index + 1]):
                     ret['n'], ret['m'] = map(int, word.split('/', 1))
                 elif word[0] == 'V' and is_digit(word[1]):
-                    ret['version'] = int(word[1:])
+                    try:
+                        ret['version'] = int(word[1:])
+                    except Exception, e:
+                        pass
                 elif word.startswith('FOR-') and is_digit(word[4]):
                     ret['for-release'] = word[4:]
                 elif is_digit(word[0]) and word.find('.') != -1:
