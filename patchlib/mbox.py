@@ -25,26 +25,56 @@ def add_tags(payload, tags):
 
     in_sob = False
     done = False
+    whitespace = []
     for line in payload.split('\n'):
-        tag = parse_tag(line, ['Signed-off-by'])
+        # if we've added our tags, we're done
         if done:
-            pass
-        elif tag:
+            lines.append(line)
+            continue
+
+        # is this line a tag
+        tag = parse_tag(line, config.get_email_tags())
+        if not in_sob and tag:
             in_sob = True
 
-            key = tag.keys()[0]
-            value = tag[key]
-
-            # Don't duplicate tags
-            if key in tags and value in tags[key]:
+        if in_sob:
+            # if it's a blank line, queue it for now
+            if not line.strip():
+                whitespace.append(line)
                 continue
-        elif in_sob:
-            for key in tags:
-                for val in tags[key]:
-                    lines.append('%s: %s' % (key, val))
-            in_sob = False
-            done = True
-        lines.append(line)
+
+            if tag:
+                # if we hit a tag and there's whitespace before the tag, preserve it
+                if whitespace:
+                    lines += whitespace
+                    whitespace = []
+                lines.append(line)
+
+                key = tag.keys()[0]
+                value = tag[key]
+
+                # Don't duplicate tags
+                if key in tags and value[0] in tags[key]:
+                    tags[key] = list(set(tags[key]) - set(value))
+            else:
+                # we hit a non-blank line that isn't a tag
+                done = True
+                in_sob = False
+
+                # append our tags before this line
+                for key in tags:
+                    for val in tags[key]:
+                        if val:
+                            lines.append('%s: %s' % (key, val))
+
+                # but before any whitespace preceeding this line
+                if whitespace:
+                    lines += whitespace
+                    whitespace = []
+                lines.append(line)
+        else:
+            lines.append(line)
+
 
     return '\n'.join(lines)
 
