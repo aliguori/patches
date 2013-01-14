@@ -13,41 +13,48 @@
 import config, mbox, gitcmd, data
 from series import *
 from subprocess import call
+from util import call_teed_output
 import os
 
-def apply_patch(pathname):
-    os.execlp('git', 'git', 'am', '--3way', pathname)
+def apply_patch(pathname, **kwds):
+    return call_teed_output(['git', 'am', '--3way', pathname], **kwds)
 
-def apply_pull_request(pull_request):
+def apply_pull_request(pull_request, **kwds):
     uri = pull_request['uri'].encode('ascii', errors='ignore')
     refspec = pull_request['refspec'].encode('ascii', errors='ignore')
     remotes = gitcmd.get_remotes()
 
     if uri not in remotes:
-        print '%s is not setup as a remote, please add a remote manually' % pull_request['uri']
-        return 1
+        raise Exception('%s is not setup as a remote, please add a remote manually' % pull_request['uri'])
 
     remote = remotes[uri]
 
-    s = call(['git', 'fetch', remote])
+    s, o = call_teed_output(['git', 'fetch', remote], **kwds)
     if s != 0:
-        return s
+        return s, o
 
-    return call(['git', 'merge', '%s/%s' % (remote, refspec)])
+    return call_teed_output(['git', 'merge', '%s/%s' % (remote, refspec)], **kwds)
+
+def apply_series(series, **kwds):
+   if is_pull_request(series):
+       return apply_pull_request(series['messages'][0]['pull-request'], **kwds)
+   elif not 'mbox_path' in series:
+       raise Exception('Cannot apply series: missing mbox')
+   return apply_patch(mbox.get_real_path(series['mbox_path']), **kwds)
 
 def main(args):
     with open(config.get_json_path(), 'rb') as fp:
         patches = data.parse_json(fp.read())
 
-    for series in patches:
-        for msg in series['messages']:
-            if msg['message-id'] == args.mid:
-                if is_pull_request(series):
-                    return apply_pull_request(series['messages'][0]['pull-request'])
-                elif not 'mbox_path' in series:
-                    print 'Cannot apply series: missing mbox'
-                    return 1
-                return apply_patch(mbox.get_real_path(series['mbox_path']))
+    try:
+        for series in patches:
+            for msg in series['messages']:
+                if msg['message-id'] == args.mid:
+                    s, o = apply_series(series)
+                    return s
+    except Exception, e:
+        print 'error: %s' % str(e)
+        return 1
 
     print "Could not find patch series.  Try running `patches fetch'."
     return 1

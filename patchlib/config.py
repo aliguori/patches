@@ -62,6 +62,14 @@ def get_trees():
 def get_hook(name):
     return get('hooks.%s' % name)
 
+def get_buildbot():
+    steps = parse_list(ini.get('buildbot', 'steps'))
+    ret = []
+    for step in steps:
+        cmd = ini.get('buildbot', step)
+        ret.append((step, cmd))
+    return ret
+
 def get(key):
     if key.find('.') == -1:
         section, item = 'options', key
@@ -100,6 +108,8 @@ def get(key):
         value = ''
     elif key == 'scan.search_days':
         value = '30'
+    elif key == 'buildbot.json':
+        value = get_patches_dir() + '/buildbot.json'
     else:
         value = None
 
@@ -136,6 +146,7 @@ get_fetch_url = option('fetch.url')
 get_email_tags = option('options.email-tags')
 get_nntp_server = option('nntp.server')
 get_nntp_group = option('nntp.group')
+get_buildbot_json = option('buildbot.json')
 
 def main(args):
     value = get(args.key)

@@ -50,6 +50,10 @@ def do_config_get(args):
     from patchlib import config
     return config.main(args)
 
+def do_build(args):
+    from patchlib import build
+    return build.main(args)
+
 def strlist(value):
     if value.find(';') == -1:
         return [value]
@@ -119,6 +123,11 @@ def main(args):
                                       help='Get a configuration value')
     subparser.add_argument('key', type=str, help='The key to retrieve')
     subparser.set_defaults(func=do_config_get)
+
+    subparser = subparsers.add_parser('build',
+                                      help='Build one or more patch series')
+    subparser.add_argument('query', type=str, nargs='+', help='Search query')
+    subparser.set_defaults(func=do_build)
 
     args = parser.parse_args(args)
     config.setup(args.config)

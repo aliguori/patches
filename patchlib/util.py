@@ -10,7 +10,16 @@
 # See the COPYING file in the top-level directory.
 #
 
-import os
+from subprocess import Popen, PIPE, STDOUT
+import os, sys
+
+def call_teed_output(args, **kwds):
+    p = Popen(args, stdout=PIPE, stderr=STDOUT, **kwds)
+    out = ''
+    for line in iter(p.stdout.readline, ''):
+        sys.stdout.write(line)
+        out += line
+    return p.wait(), out
 
 def backup_file(filename):
     backup = "%s~" % filename
