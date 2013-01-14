@@ -24,9 +24,12 @@ def add_tags(payload, tags):
     lines = []
 
     in_sob = False
+    done = False
     for line in payload.split('\n'):
         tag = parse_tag(line, ['Signed-off-by'])
-        if tag:
+        if done:
+            pass
+        elif tag:
             in_sob = True
 
             key = tag.keys()[0]
@@ -40,6 +43,7 @@ def add_tags(payload, tags):
                 for val in tags[key]:
                     lines.append('%s: %s' % (key, val))
             in_sob = False
+            done = True
         lines.append(line)
 
     return '\n'.join(lines)
