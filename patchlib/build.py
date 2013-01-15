@@ -47,6 +47,10 @@ def main(args):
         result['buildbot'] = { 'status': s, 'steps': steps }
         results.append(result)
 
+    results = { 'patches': results,
+                'version': data.VERSION,
+                'owner': config.get_buildbot_owner() }
+
     try_rmtree(working_dir)
     util.replace_file(config.get_buildbot_json(),
                       json.dumps(results, indent=2,

@@ -110,6 +110,8 @@ def get(key):
         value = '30'
     elif key == 'buildbot.json':
         value = get_patches_dir() + '/buildbot.json'
+    elif key == 'buildbot.owner':
+        value = get_default_sender()
     else:
         value = None
 
@@ -147,6 +149,7 @@ get_email_tags = option('options.email-tags')
 get_nntp_server = option('nntp.server')
 get_nntp_group = option('nntp.group')
 get_buildbot_json = option('buildbot.json')
+get_buildbot_owner = option('buildbot.owner')
 
 def main(args):
     value = get(args.key)
