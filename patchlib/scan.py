@@ -71,8 +71,10 @@ def build_patch(commits, merged_heads, thread_leaders, msg, trees, leader=False)
         patch['pull-request'] = {}
 
         for line in parts[0].get_payload().split('\n'):
-            if line.startswith('  git://'):
-                uri, refspec = line.strip().split(' ', 1)
+            stripped_line = line.strip()
+
+            if stripped_line.startswith('git://'):
+                uri, refspec = stripped_line.split(' ', 1)
                 patch['pull-request']['uri'] = uri
                 patch['pull-request']['refspec'] = refspec
             elif line.startswith('for you to fetch changes up to '):
