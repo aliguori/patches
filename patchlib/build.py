@@ -2,6 +2,7 @@ import config, mbox, data, apply, list, gitcmd, util
 import shutil, errno, os, sys, json
 from subprocess import check_call
 from util import call_teed_output
+from series import *
 
 def try_rmtree(path):
     try:
@@ -42,6 +43,9 @@ def main(args):
     results = []
 
     for series in list.find_subseries(patches, args):
+        if not is_pull_request(series) and 'mbox_path' not in series:
+            continue
+
         result = series
         s, steps = try_to_build(series, working_dir, commit)
         result['buildbot'] = { 'status': s, 'steps': steps }
