@@ -31,6 +31,8 @@ def try_to_build(series, working_dir, commit):
         if s != 0:
             return s, steps
 
+    steps = map(lambda (s, o): (s, ''), steps)
+
     return 0, steps
 
 def main(args):
