@@ -83,9 +83,10 @@ def main(args):
                                       help='Notify mailing list of patch status')
     subparser.add_argument('--smtp-server', type=str, help='SMTP server to send mail from')
     subparser.add_argument('--sender', type=str, help='Default sender of notifications')
-    subparser.add_argument('--events', type=strlist, help='List of notification events')
     subparser.add_argument('--dry-run', action='store_true', help='Do not take any real actions')
     subparser.add_argument('--fake', action='store_true', help='Update the notification database but do not send mail')
+    subparser.add_argument('template', type=str, help='Message template')
+    subparser.add_argument('query', nargs='+', help='Search query for messages to notify')
     subparser.set_defaults(func=do_notify)
 
     subparser = subparsers.add_parser('list',
