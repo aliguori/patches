@@ -85,8 +85,6 @@ def build_patch(commits, merged_heads, thread_leaders, msg, trees, leader=False)
         if 'head' in patch['pull-request'] and 'uri' in patch['pull-request']:
             if patch['pull-request']['head'] in merged_heads:
                 patch['pull-request']['commit'] = merged_heads[patch['pull-request']['head']]
-        else:
-            patch['pull-request']['broken'] = True
 
     if sub['n'] == 0:
         # Patch 0/M is the cover letter
@@ -127,6 +125,21 @@ def build_patch(commits, merged_heads, thread_leaders, msg, trees, leader=False)
     patch['full_date'] = msg.get_date()
 
     return patch
+
+def fixup_pull_request(series, merged_heads):
+    if 'head' in series['messages'][0]['pull-request']:
+        return series
+
+    if len(series['messages']) == 1:
+        return series
+
+    first_real_patch = series['messages'][-1]
+    if ('commit' in first_real_patch and
+        first_real_patch['commit'] in merged_heads):
+        series['messages'][0]['pull-request']['commit'] = merged_heads[first_real_patch['commit']]
+
+    return series
+            
 
 def build_patches(notmuch_dir, search_days, mail_query, trees):
 
@@ -184,6 +197,9 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
     
         series = { 'messages': patch_list,
                    'total_messages': thread.get_total_messages() }
+
+        if series_.is_pull_request(series):
+            series = fixup_pull_request(series, merged_heads)
     
         message_list.sort(message.cmp_patch)
 
