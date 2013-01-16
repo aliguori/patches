@@ -102,7 +102,7 @@ def main(args):
 
     subparser = subparsers.add_parser('apply',
                                       help='Apply a patch or pull request')
-    subparser.add_argument('mid', type=str, help='Message ID of the leader')
+    subparser.add_argument('query', type=str, nargs='+', help='Query string for patches to apply')
     subparser.set_defaults(func=do_apply)
 
     subparser = subparsers.add_parser('nntp-setup',

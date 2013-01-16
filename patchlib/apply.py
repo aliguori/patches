@@ -11,6 +11,7 @@
 #
 
 import config, mbox, gitcmd, data
+from list import find_subseries
 from series import *
 from subprocess import call
 from util import call_teed_output
@@ -46,16 +47,10 @@ def main(args):
     with open(config.get_json_path(), 'rb') as fp:
         patches = data.parse_json(fp.read())
 
-    try:
-        for series in patches:
-            for msg in series['messages']:
-                if msg['message-id'] == args.mid:
-                    s, o = apply_series(series)
-                    return s
-    except Exception, e:
-        print 'error: %s' % str(e)
-        return 1
+    for series in find_subseries(patches, args):
+        s, _ = apply_series(series)
+        if s:
+            return s
 
-    print "Could not find patch series.  Try running `patches fetch'."
-    return 1
+    return 0
             
