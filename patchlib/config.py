@@ -70,6 +70,12 @@ def get_buildbot():
         ret.append((step, cmd))
     return ret
 
+def get_links():
+    ret = {}
+    for item, value in ini.get_items('links'):
+        ret[item] = value
+    return ret
+
 def get(key):
     if key.find('.') == -1:
         section, item = 'options', key

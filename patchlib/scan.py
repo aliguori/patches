@@ -238,8 +238,13 @@ def main(args):
     patches = build_patches(notmuch_dir, search_days, mail_query, trees)
     patches.sort(sort_patch)
 
+    links = config.get_links()
+
     info = { 'version': data.VERSION,
              'patches': patches }
+
+    if links:
+        info['links'] = links
 
     replace_file(config.get_json_path(),
                  json.dumps(info, indent=2,
