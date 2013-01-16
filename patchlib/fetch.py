@@ -13,7 +13,7 @@
 from urllib2 import urlopen
 from util import *
 import config, mbox, data
-import os
+import os, json
 
 def main(args):
     if not args.url:
@@ -39,9 +39,39 @@ def fetch(url=None):
     finally:
         fp.close()
 
-    patches = data.parse_json(json_data)
+    full_patches = data.parse_json(json_data, full=True)
+    patches = full_patches['patches']
 
     print 'Fetched info on %d patch series' % len(patches)
+    if 'links' in full_patches:
+        print 'Fetching links...'
+
+        mids = {}
+        for name in full_patches['links']:
+            url = full_patches['links'][name]
+
+            fp = urlopen(url)
+            try:
+                link_data = fp.read()
+            finally:
+                fp.close()
+
+            builds = data.parse_json(link_data, full=True)
+            for series in builds['patches']:
+                if 'buildbot' not in series:
+                    continue
+
+                mid = series['messages'][0]['message-id'] 
+                if mid not in mids:
+                    mids[mid] = {}
+                mids[mid][name] = series['buildbot']
+                mids[mid][name]['owner'] = builds['owner']
+
+        for series in patches:
+            mid = series['messages'][0]['message-id']
+            if mid in mids:
+                series['buildbots'] = mids[mid]
+
     print 'Fetching mboxes...'
 
     for series in patches:
@@ -65,5 +95,9 @@ def fetch(url=None):
             fp.close()
 
         replace_file(mbox.get_real_path(series['mbox_path']), mbox_data)
+
+    json_data = json.dumps(full_patches, indent=2,
+                           separators=(',', ': '),
+                           encoding='iso-8859-1')
 
     replace_file(config.get_json_path(), json_data)

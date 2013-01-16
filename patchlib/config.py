@@ -72,7 +72,7 @@ def get_buildbot():
 
 def get_links():
     ret = {}
-    for item, value in ini.get_items('links'):
+    for item, value in ini.items('links'):
         ret[item] = value
     return ret
 
