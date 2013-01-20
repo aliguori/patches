@@ -41,9 +41,10 @@ def unique(lst):
 ##################################
 
 thread_leaders = {}
+full_thread_leaders = {}
 
 def build_thread_leaders(q, then):
-    global thread_leaders
+    global thread_leaders, full_thread_leaders
     oldest = then
 
     for thread in q.search_threads():
@@ -54,7 +55,22 @@ def build_thread_leaders(q, then):
             continue
 
         n, m, version, stripped_subject = message.parse_subject(top)
-        if thread_leaders.has_key(stripped_subject) and version != None:
+        if stripped_subject not in full_thread_leaders:
+            val = []
+        else:
+            val = full_thread_leaders[stripped_subject]
+        val.append((top.get_date(), version))
+
+        def fn(lhs, rhs):
+            ret = cmp(lhs[0], rhs[0])
+            if ret == 0:
+                ret = cmp(lhs[1], rhs[1])
+            return ret
+        val.sort(fn)
+
+        full_thread_leaders[stripped_subject] = val
+
+        if thread_leaders.has_key(stripped_subject):
             new_version = max(version, thread_leaders[stripped_subject])
             thread_leaders[stripped_subject] = new_version
         else:
@@ -62,8 +78,16 @@ def build_thread_leaders(q, then):
 
     return oldest
 
-def is_leader_obsolete(subject, version):
-    return version < thread_leaders[subject]
+def is_leader_obsolete(subject, version, date):
+    val = full_thread_leaders[subject]
+    for i in range(len(val) - 1):
+        d, v = val[i]
+        if date == d and v == version:
+            next_d, next_v = val[i + 1]
+            if next_v > version:
+                return True
+            break
+    return False
 
 def build_patch(commits, merged_heads, msg, trees, leader=False):
     patch = {}
@@ -94,7 +118,7 @@ def build_patch(commits, merged_heads, msg, trees, leader=False):
     if sub['n'] == 0:
         # Patch 0/M is the cover letter
         patch['cover'] = True
-    if leader and is_leader_obsolete(stripped_subject, sub['version']):
+    if leader and is_leader_obsolete(stripped_subject, sub['version'], msg.get_date()):
         # If this is older than a version we've seen, the whole series is
         # obsolete.  We only look at the thread leader which is either the
         # cover letter or the very first patch.
