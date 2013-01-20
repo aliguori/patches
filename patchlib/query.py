@@ -117,6 +117,9 @@ def eval_query_term(series, term, scope):
     else:
         command = None
 
+    if command == None:
+        raise Exception('foo')
+
     if command == 'status':
         status = args.lower()
 
@@ -128,12 +131,6 @@ def eval_query_term(series, term, scope):
             return is_pull_request(series)
         elif status == 'rfc':
             return is_rfc(series)
-        elif status == 'unapplied':
-            return not (is_broken(series) or
-                       is_obsolete(series) or
-                       is_pull_request(series) or
-                       is_rfc(series) or
-                       is_committed(series))
         elif status == 'committed':
             return is_committed(series)
         elif status == 'reviewed':
@@ -142,7 +139,8 @@ def eval_query_term(series, term, scope):
             raise Exception("Unknown status `%s'" % status)
     elif command == 'label':
         txt = config.get_label(args)
-        t, _ = parse_query(tokenize_query(txt))
+        tks = tokenize_query(txt)
+        t, _ = parse_query(tks)
         return eval_query(series, t, scope)
     elif command == 'from':
         def fn(msg):
@@ -168,7 +166,7 @@ def eval_query_term(series, term, scope):
         def fn(msg):
             return msg['message-id'] == args
         return eval_messages(series, fn, scope)
-    elif command.startswith('buildbot['):
+    elif command and command.startswith('buildbot['):
         name = command[9:].split(']', 1)[0]
         if 'buildbots' in series and name in series['buildbots']:
             bot = series['buildbots'][name]

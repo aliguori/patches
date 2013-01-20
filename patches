@@ -90,7 +90,7 @@ def main(args):
 
     subparser = subparsers.add_parser('list',
                                       help='List pending patches')
-    subparser.add_argument('query', type=str, nargs='*', default=['status:unapplied'], help='Search query')
+    subparser.add_argument('query', type=str, nargs='*', default=['label:__list__'], help='Search query')
     subparser.add_argument('--format', type=str, default='full', help='Select output format (default "oneline")')
     subparser.set_defaults(func=do_list)
 

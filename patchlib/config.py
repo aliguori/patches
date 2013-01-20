@@ -77,7 +77,7 @@ def get_links():
     return ret
 
 def get_label(label):
-    return ini.get('labels', label)
+    return get('labels.%s' % label)
 
 def get_notifications():
     ret = []
@@ -127,6 +127,9 @@ def get(key):
         value = get_patches_dir() + '/buildbot.json'
     elif key == 'buildbot.owner':
         value = get_default_sender()
+    elif key == 'labels.__list__':
+        value = ('not status:broken not status:obsolete ' +
+                 'not status:pull-request not status:rfc not status:committed)')
     else:
         value = None
 
