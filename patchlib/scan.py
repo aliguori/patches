@@ -40,9 +40,11 @@ def unique(lst):
 
 ##################################
 
-def find_thread_leaders(q, then):
+thread_leaders = {}
+
+def build_thread_leaders(q, then):
+    global thread_leaders
     oldest = then
-    thread_leaders = {}
 
     for thread in q.search_threads():
         oldest = min(oldest, thread.get_oldest_date())
@@ -58,9 +60,12 @@ def find_thread_leaders(q, then):
         else:
             thread_leaders[stripped_subject] = version
 
-    return thread_leaders, oldest
+    return oldest
 
-def build_patch(commits, merged_heads, thread_leaders, msg, trees, leader=False):
+def is_leader_obsolete(subject, version):
+    return version < thread_leaders[subject]
+
+def build_patch(commits, merged_heads, msg, trees, leader=False):
     patch = {}
 
     sub = message.decode_subject(msg)
@@ -89,7 +94,7 @@ def build_patch(commits, merged_heads, thread_leaders, msg, trees, leader=False)
     if sub['n'] == 0:
         # Patch 0/M is the cover letter
         patch['cover'] = True
-    if leader and sub['version'] < thread_leaders[stripped_subject]:
+    if leader and is_leader_obsolete(stripped_subject, sub['version']):
         # If this is older than a version we've seen, the whole series is
         # obsolete.  We only look at the thread leader which is either the
         # cover letter or the very first patch.
@@ -151,7 +156,7 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
     query = '%s (subject:PATCH or subject:PULL) %s..%s' % (mail_query, then, now)
     q = notmuch.Query(db, query)
 
-    thread_leaders, oldest = find_thread_leaders(q, then)
+    oldest = build_thread_leaders(q, then)
 
     # A pull request may contain patches older than the posted commits.  That's
     # because a commit doesn't happen *after* the post like what normally
@@ -173,7 +178,7 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
         if not message.is_patch(top):
             continue
 
-        patch = build_patch(commits, merged_heads, thread_leaders,
+        patch = build_patch(commits, merged_heads,
                             top, trees, leader=True)
 
         patch_list = [ patch ]
@@ -191,7 +196,7 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
                 new_tags = message.find_extra_tags(reply, False)
                 patch_list[0]['tags'] = message.merge_tags(patch_list[0]['tags'], new_tags)
             else:
-                patch = build_patch(commits, merged_heads, thread_leaders, reply, trees)
+                patch = build_patch(commits, merged_heads, reply, trees)
                 patch_list.append(patch)
                 message_list.append((reply, patch['tags']))
     
