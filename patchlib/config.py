@@ -79,6 +79,12 @@ def get_links():
 def get_label(label):
     return ini.get('labels', label)
 
+def get_notifications():
+    ret = []
+    for item, value in ini.items('notifications'):
+        ret.append((item, value))
+    return ret
+
 def get(key):
     if key.find('.') == -1:
         section, item = 'options', key

@@ -15,7 +15,7 @@ import os, smtplib, time
 import config, data
 from series import *
 from email.header import Header
-from list import find_subseries
+from list import search_subseries
 from UserDict import UserDict
 
 def format_addr(addr):
@@ -93,9 +93,9 @@ class SeriesDict(UserDict):
 
         return value
 
-def notify(args, patches, notified_dir, template):
+def notify(args, patches, notified_dir, query, template):
     sender = config.get_default_sender()
-    for series in find_subseries(patches, args):
+    for series in search_subseries(patches, query):
         sd = SeriesDict(series)
         try_to_send(args, notified_dir, sender, series['messages'][0], template % sd)
 
@@ -117,9 +117,18 @@ def main(args):
     with open(config.get_json_path(), 'rb') as fp:
         patches = data.parse_json(fp.read())
 
-    with open(args.template, 'rb') as fp:
-        template = fp.read()
+    nots = []
+    if args.labels:
+        def fn(x):
+            return (x, config.get_label(x))
+        nots = map(fn, args.labels)
+    else:
+        nots = config.get_notifications()
 
-    notify(args, patches, notified_dir, template)
+    for label, filename in nots:
+        with open(filename, 'rb') as fp:
+            template = fp.read()
+        
+        notify(args, patches, notified_dir, 'label:%s' % label, template)
 
     return 0

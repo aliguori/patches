@@ -41,10 +41,10 @@ def out(*args):
     else:
         print encode(fmt)
 
-def find_subseries(patches, args):
+def search_subseries(patches, query_str):
     sub_series = []
 
-    tokens = query.tokenize_query(' '.join(args.query))
+    tokens = query.tokenize_query(query_str)
     q, _ = query.parse_query(tokens)
     
     for series in patches:
@@ -54,6 +54,9 @@ def find_subseries(patches, args):
         sub_series.append(series)
 
     return sub_series
+
+def find_subseries(patches, args):
+    return search_subseries(patches, ' '.join(args.query))
 
 def dump_notmuch_query(patches, args):
     import notmuch
