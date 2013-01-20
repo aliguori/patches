@@ -168,6 +168,33 @@ def eval_query_term(series, term, scope):
         def fn(msg):
             return msg['message-id'] == args
         return eval_messages(series, fn, scope)
+    elif command.startswith('buildbot['):
+        name = command[9:].split(']', 1)[0]
+        if 'buildbots' in series and name in series['buildbots']:
+            bot = series['buildbots'][name]
+            steps = bot['steps']
+
+            item = args
+            fail = False
+            if item[0] == '+':
+                item = item[1:]
+            elif item[0] == '-':
+                item = item[1:]
+                fail = True
+
+            if item == 'status':
+                if fail:
+                    return bool(bot['status'])
+                else:
+                    return bool(not bot['status'])
+
+            for step, status, output in steps:
+                if step == item:
+                    if fail:
+                        return bool(status)
+                    else:
+                        return bool(not status)
+            return False
     elif command != None:
         command = message.format_tag_name(command)
         email_tags = config.get_email_tags()
