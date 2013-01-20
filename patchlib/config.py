@@ -76,6 +76,9 @@ def get_links():
         ret[item] = value
     return ret
 
+def get_label(label):
+    return ini.get('labels', label)
+
 def get(key):
     if key.find('.') == -1:
         section, item = 'options', key

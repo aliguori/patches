@@ -140,6 +140,10 @@ def eval_query_term(series, term, scope):
             return is_reviewed(series)
         else:
             raise Exception("Unknown status `%s'" % status)
+    elif command == 'label':
+        txt = config.get_label(args)
+        t, _ = parse_query(tokenize_query(txt))
+        return eval_query(series, t, scope)
     elif command == 'from':
         def fn(msg):
             return match_email_address(msg['from'], args)
