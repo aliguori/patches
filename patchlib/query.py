@@ -152,7 +152,7 @@ def eval_query_term(series, term, scope):
             elif 'committer' in msg:
                 return match_email_address(msg['committer'], args)
             return False
-        return eval_messages(series, fn, scope)
+        return eval_messages(series, fn, scope, cover=False)
     elif command == 'to':
         def fn(msg):
             for to in msg['to'] + msg['cc']:
