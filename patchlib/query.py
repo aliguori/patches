@@ -164,6 +164,12 @@ def eval_query_term(series, term, scope):
         def fn(msg):
             return msg['message-id'] == args
         return eval_messages(series, fn, scope)
+    elif command == 'tag':
+        def fn(msg):
+            if not args:
+                return 'subject-tags' in msg
+            return 'subject-tags' in msg and args.upper() in msg['subject-tags']
+        return eval_messages(series, fn, scope)
     elif command and command.startswith('buildbot['):
         name = command[9:].split(']', 1)[0]
         if 'buildbots' in series and name in series['buildbots']:
