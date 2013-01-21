@@ -15,6 +15,7 @@ def try_to_build(series, working_dir, commit, bot):
     try_rmtree(working_dir)
 
     check_call(['git', 'clone', '-sn', config.get_git_dir(), working_dir])
+    check_call(['cp', config.get_git_dir() + '/config', working_dir + '/.git'])
     check_call(['git', 'checkout', commit], cwd=working_dir)
     check_call(['git', 'tag', 'BUILD_HEAD'], cwd=working_dir)
 
@@ -69,7 +70,7 @@ def main(args):
     if not bots:
         bots = config.get_buildbots()
 
-    for bot in config.get_buildbots():
+    for bot in bots:
         q = config.get_buildbot_query(bot)
         run_bot(patches, working_dir, commit, bot, q)
 
