@@ -72,7 +72,8 @@ def parse_query_unary(terms):
                 raise Exception('Expected paranthesis, got %s' % rest[0])
             return ['quote', query], rest[1:]
         elif terms[0] in ['any', 'all', 'not']:
-            return [terms[0], parse_query(terms[1])[0]], terms[2:]
+            query, rest = parse_query_unary(terms[1:])
+            return [terms[0], query], rest
         else:
             return parse_query(terms[0])[0], terms[1:]
     else:
@@ -116,9 +117,6 @@ def eval_query_term(series, term, scope):
         command, args = term.split(':', 1)
     else:
         command = None
-
-    if command == None:
-        raise Exception('foo')
 
     if command == 'status':
         status = args.lower()
@@ -231,6 +229,15 @@ def eval_query(series, terms, scope='any'):
         raise Exception('Unexpected node type')
 
 if __name__ == '__main__':
-    a = '(a (b)) any c'
+    a = '(status:foo or status:bar)'
     t = tokenize_query(a)
+    print t
+    print parse_query(t)
+    a = 'not (status:foo or status:bar)'
+    t = tokenize_query(a)
+    print t
+    print parse_query(t)
+    a = 'not status:foo or status:bar'
+    t = tokenize_query(a)
+    print t
     print parse_query(t)
