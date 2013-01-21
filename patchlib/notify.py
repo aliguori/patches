@@ -35,11 +35,6 @@ def try_to_send(args, notified_dir, sender, message, payload):
     if os.access(notified_dir + '/mid/' + mid, os.F_OK):
         return
 
-    if not args.dry_run:
-        f = open(notified_dir + '/mid/' + mid, 'w')
-        f.flush()
-        f.close()
-
     msg = email.message.Message()
 
     receipents = [ message['from'] ]
@@ -69,6 +64,11 @@ def try_to_send(args, notified_dir, sender, message, payload):
 
         if not sent:
             raise
+
+    if not args.dry_run:
+        f = open(notified_dir + '/mid/' + mid, 'w')
+        f.flush()
+        f.close()
 
     print msg.as_string()
     print '-' * 80
