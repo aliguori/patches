@@ -18,12 +18,20 @@ from util import call_teed_output
 import os
 
 def apply_patch(pathname, **kwds):
-    return call_teed_output(['git', 'am', '--3way', pathname], **kwds)
+    opts = [ '--3way' ]
+    if 'signed-off-by' in kwds:
+        opts.append('-s')
+        del kwds['signed-off-by']
+    opts.append(pathname)
+    return call_teed_output(['git', 'am'] + opts, **kwds)
 
 def apply_pull_request(pull_request, **kwds):
     uri = pull_request['uri'].encode('ascii', errors='ignore')
     refspec = pull_request['refspec'].encode('ascii', errors='ignore')
     remotes = gitcmd.get_remotes()
+
+    if 'signed-off-by' in kwds:
+        del kwds['signed-off-by']
 
     if uri not in remotes:
         raise Exception('%s is not setup as a remote, please add a remote manually' % pull_request['uri'])
@@ -50,6 +58,8 @@ def main(args):
     kwds = {}
     if args.git_dir:
         kwds['cwd'] = args.git_dir
+    if args.s:
+        kwds['signed-off-by'] = True
 
     for series in find_subseries(patches, args):
         s, _ = apply_series(series, **kwds)
