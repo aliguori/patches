@@ -13,13 +13,6 @@
 import config
 from email.header import decode_header
 
-TAGS = [
-    'Reviewed-by',
-    'Tested-by',
-    'Reported-by',
-    'Nacked-by'
-]
-
 def get_header(msg, name):
     value = u''
 
@@ -141,7 +134,7 @@ def parse_tag(line, extra_tags=[]):
     key = format_tag_name(line[0:i])
     value = line[i + 1:].strip()
 
-    if key not in (TAGS + extra_tags) or not value:
+    if key not in (config.get_email_tags() + extra_tags) or not value:
         return None
 
     return { key: [value] }
