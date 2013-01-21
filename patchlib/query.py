@@ -146,11 +146,11 @@ def eval_query_term(series, term, scope):
         return eval_messages(series, fn, scope)
     elif command == 'committer':
         def fn(msg):
-            if 'committer' in msg:
-                return match_email_address(msg['committer'], args)
-            elif 'pull-request' in msg and 'commit' in msg['pull-request']:
+            if 'pull-request' in msg and 'commit' in msg['pull-request']:
                 ret = match_email_address(msg['pull-request']['commit']['committer'], args)
                 return ret
+            elif 'committer' in msg:
+                return match_email_address(msg['committer'], args)
             return False
         return eval_messages(series, fn, scope)
     elif command == 'to':
