@@ -62,12 +62,24 @@ def get_trees():
 def get_hook(name):
     return get('hooks.%s' % name)
 
-def get_buildbot():
-    steps = parse_list(ini.get('buildbot', 'steps'))
+def get_buildbot(name):
+    steps = parse_list(ini.get('buildbot "%s"' % name, 'steps'))
     ret = []
     for step in steps:
-        cmd = ini.get('buildbot', step)
+        cmd = ini.get('buildbot "%s"' % name, step)
         ret.append((step, cmd))
+    return ret
+
+def get_buildbot_json(name):
+    ret = get('buildbot "%s".json' % name)
+    if not ret:
+        ret = get_patches_dir() + '/buildbot-%s.json' % name
+    return ret
+
+def get_buildbot_owner(name):
+    ret = get('buildbot "%s".owner' % name)
+    if not ret:
+        ret = get_default_sender()
     return ret
 
 def get_links():
@@ -124,17 +136,13 @@ def get(key):
         value = ''
     elif key == 'scan.search_days':
         value = '30'
-    elif key == 'buildbot.json':
-        value = get_patches_dir() + '/buildbot.json'
-    elif key == 'buildbot.owner':
-        value = get_default_sender()
     elif key == 'labels.__list__':
         value = ('not status:broken not status:obsolete ' +
                  'not status:pull-request not status:rfc not status:committed)')
     else:
         value = None
 
-    if key in ['options.email-tags', 'notify.events']:
+    if key in ['options.email-tags', 'notify.events', 'buildbots.bots']:
         value = parse_list(value)
     elif key in ['scan.search_days']:
         value = int(value)
@@ -167,8 +175,7 @@ get_fetch_url = option('fetch.url')
 get_email_tags = option('options.email-tags')
 get_nntp_server = option('nntp.server')
 get_nntp_group = option('nntp.group')
-get_buildbot_json = option('buildbot.json')
-get_buildbot_owner = option('buildbot.owner')
+get_buildbots = option('buildbots.bots')
 
 def main(args):
     value = get(args.key)

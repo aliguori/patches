@@ -11,7 +11,7 @@ def try_rmtree(path):
         if num != errno.ENOENT:
             raise
 
-def try_to_build(series, working_dir, commit):
+def try_to_build(series, working_dir, commit, bot):
     try_rmtree(working_dir)
 
     check_call(['git', 'clone', '-sn', config.get_git_dir(), working_dir])
@@ -25,7 +25,7 @@ def try_to_build(series, working_dir, commit):
     if s != 0:
         return s, steps
 
-    cmds = config.get_buildbot()
+    cmds = config.get_buildbot(bot)
     for step, cmd in cmds:
         s, o = call_teed_output(['/bin/sh', '-c', cmd], cwd=working_dir)
         steps.append((step, s, o))
@@ -36,13 +36,7 @@ def try_to_build(series, working_dir, commit):
 
     return 0, steps
 
-def main(args):
-    with open(config.get_json_path(), 'rb') as fp:
-        patches = data.parse_json(fp.read())
-
-    working_dir = config.get_working_dir()
-    commit = gitcmd.get_sha1(config.get_master_branch())
-
+def run_bot(args, patches, working_dir, commit, bot):
     results = []
 
     for series in list.find_subseries(patches, args):
@@ -50,18 +44,29 @@ def main(args):
             continue
 
         result = series
-        s, steps = try_to_build(series, working_dir, commit)
+        s, steps = try_to_build(series, working_dir, commit, bot)
         result['buildbot'] = { 'status': s, 'steps': steps }
         results.append(result)
 
     results = { 'patches': results,
                 'version': data.VERSION,
-                'owner': config.get_buildbot_owner() }
+                'owner': config.get_buildbot_owner(bot) }
 
     try_rmtree(working_dir)
-    util.replace_file(config.get_buildbot_json(),
+    util.replace_file(config.get_buildbot_json(bot),
                       json.dumps(results, indent=2,
                                  separators=(',', ': '),
                                  encoding='iso-8859-1'))
+
+def main(args):
+    with open(config.get_json_path(), 'rb') as fp:
+        patches = data.parse_json(fp.read())
+
+    working_dir = config.get_working_dir()
+    commit = gitcmd.get_sha1(config.get_master_branch())
+
+    for bot in config.get_buildbots():
+        run_bot(args, patches, working_dir, commit, bot)
+
             
     
