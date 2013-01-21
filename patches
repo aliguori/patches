@@ -128,7 +128,8 @@ def main(args):
 
     subparser = subparsers.add_parser('build',
                                       help='Build one or more patch series')
-    subparser.add_argument('query', type=str, nargs='+', help='Search query')
+    subparser.add_argument('bots', type=str, nargs='*', 
+                           help='Build bots to run')
     subparser.set_defaults(func=do_build)
 
     args = parser.parse_args(args)

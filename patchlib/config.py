@@ -82,6 +82,9 @@ def get_buildbot_owner(name):
         ret = get_default_sender()
     return ret
 
+def get_buildbot_query(name):
+    return get('buildbot "%s".query' % name)
+
 def get_links():
     ret = {}
     if ini.has_section('links'):

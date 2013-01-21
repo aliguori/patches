@@ -36,10 +36,10 @@ def try_to_build(series, working_dir, commit, bot):
 
     return 0, steps
 
-def run_bot(args, patches, working_dir, commit, bot):
+def run_bot(patches, working_dir, commit, bot, query):
     results = []
 
-    for series in list.find_subseries(patches, args):
+    for series in list.search_subseries(patches, query):
         if not is_pull_request(series) and 'mbox_path' not in series:
             continue
 
@@ -65,8 +65,13 @@ def main(args):
     working_dir = config.get_working_dir()
     commit = gitcmd.get_sha1(config.get_master_branch())
 
+    bots = args.bots
+    if not bots:
+        bots = config.get_buildbots()
+
     for bot in config.get_buildbots():
-        run_bot(args, patches, working_dir, commit, bot)
+        q = config.get_buildbot_query(bot)
+        run_bot(patches, working_dir, commit, bot, q)
 
             
     
