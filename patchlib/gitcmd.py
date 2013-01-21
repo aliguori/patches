@@ -12,6 +12,7 @@
 
 import config
 from commands import getstatusoutput
+from subprocess import check_output
 
 def git(*args, **kwds):
     if 'git_dir' not in kwds:
@@ -35,14 +36,17 @@ def get_sha1(refspec):
         raise Exception(o)
     return o
 
-def get_remotes():
-    o = git('remote', 'show', git_dir=None)
+def get_remotes(cwd=None, **kwds):
+    o = check_output(['git', 'remote', 'show'], cwd=cwd)
 
     remotes = {}
 
     for remote in o.split('\n'):
-        uri = git('config', 'remote.%s.url' % remote, git_dir=None)
-        remotes[uri] = remote
+        if not remote:
+            continue
+
+        uri = check_output(['git', 'config', 'remote.%s.url' % remote], cwd=cwd)
+        remotes[uri.strip()] = remote
 
     return remotes
 

@@ -28,7 +28,7 @@ def apply_patch(pathname, **kwds):
 def apply_pull_request(pull_request, **kwds):
     uri = pull_request['uri'].encode('ascii', errors='ignore')
     refspec = pull_request['refspec'].encode('ascii', errors='ignore')
-    remotes = gitcmd.get_remotes()
+    remotes = gitcmd.get_remotes(**kwds)
 
     if 'signed-off-by' in kwds:
         del kwds['signed-off-by']
