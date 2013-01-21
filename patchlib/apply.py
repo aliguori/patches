@@ -47,8 +47,12 @@ def main(args):
     with open(config.get_json_path(), 'rb') as fp:
         patches = data.parse_json(fp.read())
 
+    kwds = {}
+    if args.git_dir:
+        kwds['cwd'] = args.git_dir
+
     for series in find_subseries(patches, args):
-        s, _ = apply_series(series)
+        s, _ = apply_series(series, **kwds)
         if s:
             return s
 
