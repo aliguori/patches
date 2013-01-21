@@ -16,6 +16,7 @@ def try_to_build(series, working_dir, commit):
 
     check_call(['git', 'clone', '-sn', config.get_git_dir(), working_dir])
     check_call(['git', 'checkout', commit], cwd=working_dir)
+    check_call(['git', 'tag', 'BUILD_HEAD'], cwd=working_dir)
 
     steps = []
 
@@ -31,7 +32,7 @@ def try_to_build(series, working_dir, commit):
         if s != 0:
             return s, steps
 
-    steps = map(lambda (s, o): (s, ''), steps)
+    steps = map(lambda (name, s, o): (name, s, ''), steps)
 
     return 0, steps
 
