@@ -137,6 +137,8 @@ def eval_query_term(series, term, scope):
             raise Exception("Unknown status `%s'" % status)
     elif command == 'label':
         txt = config.get_label(args)
+        if txt == None:
+            raise Exception('Invalid label %s' % args)
         tks = tokenize_query(txt)
         t, _ = parse_query(tks)
         return eval_query(series, t, scope)

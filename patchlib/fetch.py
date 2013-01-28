@@ -19,7 +19,7 @@ def main(args):
     if not args.url:
         fetch()
     else:
-        fetch(args.url[0])
+        fetch(args.url)
 
 def fetch(url=None):
     if not url:
