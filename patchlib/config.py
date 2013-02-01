@@ -95,6 +95,9 @@ def get_links():
 def get_label(label):
     return get('labels.%s' % label)
 
+def get_notification(label):
+    return ini.get('notifications', label)
+
 def get_notifications():
     ret = []
     for item, value in ini.items('notifications'):

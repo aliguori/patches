@@ -48,14 +48,21 @@ def try_to_send(args, notified_dir, sender, message, payload):
     msg['To'] = encode_address_list([ message['from'] ] + message['to'])
     msg['In-Reply-To'] = '<%s>' % message['message-id']
     msg['Date'] = email.utils.formatdate()
-    msg.set_payload(payload)
+
+    lines = payload.split('\n')
+    if len(lines) > 1024:
+        lines = lines[0:1024] + ['[Output truncated]']
+    payload = '\n'.join(lines)
+    msg.set_payload(payload.encode('ascii', errors='replace'))
+
+    txt_msg = msg.as_string().encode('ascii', errors='replace')
 
     if not args.dry_run and not args.fake:
         sent = False
         for i in range(10):
             try:
                 s = smtplib.SMTP(config.get_smtp_server())
-                s.sendmail(sender, receipents, msg.as_string())
+                s.sendmail(sender, receipents, txt_msg)
                 s.quit()
                 sent = True
                 break
@@ -70,7 +77,7 @@ def try_to_send(args, notified_dir, sender, message, payload):
         f.flush()
         f.close()
 
-    print msg.as_string()
+    print txt_msg
     print '-' * 80
 
 class SeriesDict(UserDict):
@@ -119,8 +126,9 @@ def main(args):
 
     nots = []
     if args.labels:
+        print args.labels
         def fn(x):
-            return (x, config.get_label(x))
+            return (x, config.get_notification(x))
         nots = map(fn, args.labels)
     else:
         nots = config.get_notifications()
