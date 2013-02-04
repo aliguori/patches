@@ -1,7 +1,7 @@
 Setting up a New Patch Database
 -------------------------------
 
-To setup a new patch database, you need to create a '''~/.patchesrc''' file with
+To setup a new patch database, you need to create a `~/.patchesrc` file with
 at least the following sections:
 
     [scan]
@@ -38,6 +38,6 @@ at least the following sections:
     stefanha/trivial-patches=http://github.com/stefanha/qemu/commit/%s
     ...
 
-After patches is configured, you can simply run '''patches scan''' to create
-the database.  The results will be stored in '''~/.patches/public''' which can
+After patches is configured, you can simply run `patches scan` to create
+the database.  The results will be stored in `~/.patches/public` which can
 then be published via HTTP or FTP.

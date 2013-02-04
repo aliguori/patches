@@ -62,19 +62,19 @@ one of the messages in a thread or all messages in a thread.
 Special terms have a prefix and can be used to search against other parameters
 than subject text.  The following prefixes are supported:
 
-- ''status:broken'' show broken series (malformed or missing patches)
-- ''status:obsolete'' show series that have newer versions available
-- ''status:pull-request'' show pull requests
-- ''status:rfc'' show RFC postings
-- ''status:committed'' show committed series
-- ''status:unapplied'' short hand for '''not (status:broken or status:obsolete or status:pull-request or status:rfc or status:committed)'''
-- ''status:reviewed'' show series where every patch has at least one Reviewed-by
-- ''to:ADDRESS'' show series where '''ADDRESS''' is on the receipent list
-- ''from:ADDRESS'' show series where '''ADDRESS''' is the sender
-- ''reviewed-by:ADDRESS'' show series if a patch has a Reviewed-by by ADDRESS
-- ''tested-by:ADDRESS'' show series if a patch has a Tested-by by ADDRESS
-- ''nacked-by:ADDRESS'' show series if a patch has a Nacked-by by ADDRESS
-- ''acked-by:ADDRESS'' show series if a patch has a Acked-by by ADDRESS
+- `status:broken` show broken series (malformed or missing patches)
+- `status:obsolete` show series that have newer versions available
+- `status:pull-request` show pull requests
+- `status:rfc` show RFC postings
+- `status:committed` show committed series
+- `status:unapplied` short hand for `not (status:broken or status:obsolete or status:pull-request or status:rfc or status:committed)`
+- `status:reviewed` show series where every patch has at least one Reviewed-by
+- `to:ADDRESS` show series where `ADDRESS` is on the receipent list
+- `from:ADDRESS` show series where `ADDRESS` is the sender
+- `reviewed-by:ADDRESS` show series if a patch has a Reviewed-by by `ADDRESS`
+- `tested-by:ADDRESS` show series if a patch has a Tested-by by `ADDRESS`
+- `nacked-by:ADDRESS` show series if a patch has a Nacked-by by `ADDRESS`
+- `acked-by:ADDRESS` show series if a patch has a Acked-by by `ADDRESS`
 
 Query Examples
 --------------
@@ -96,7 +96,7 @@ Integration with Notmuch
 patches is not meant to be a tool to review patches directly.  Instead, it is
 designed to integrate with mail clients for displaying patches.
 
-The '''list''' command can be passed '''--format=notmuch''' which will cause
+The `list` command can be passed `--format=notmuch` which will cause
 patches to output a notmuch search query instead of a stylized output.  The
 included patches.el wraps this in a ELISP interactive function that will invoke
 the notmuch-search major mode directly.
@@ -113,8 +113,8 @@ directly from the notmuch-search major mode.
 Notifying on Commits
 --------------------
 
-To use the '''notify''' command, you need to add the following stanzas to your
-'''~/.patchesrc''' file:
+To use the `notify` command, you need to add the following stanzas to your
+`~/.patchesrc` file:
 
     [notify]
     default_sender=Your Name <your@email.com>
@@ -125,13 +125,13 @@ This will send out notifications when patches detects that you have committed
 a patch or pulled a pull request.
 
 There are two very important options when using the notify command.  The
-'''--dry-run''' option will show you the mail you are about to send without
-taking any real action.  You should always run with '''--dry-run''' before
+`--dry-run` option will show you the mail you are about to send without
+taking any real action.  You should always run with `--dry-run` before
 sending notifies!
 
 Since patches is looking at a 30 day history, the first time you run it, it
 will want to send a very large number of notifications.
 
 To setup the database and avoid these notifications, you should run with the
-'''--fake''' option for the first time.  This will pretend like the emails are
+`--fake` option for the first time.  This will pretend like the emails are
 being sent without actually sending them.
