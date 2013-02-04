@@ -46,7 +46,16 @@ To get started with the QEMU project:
     Applying: qdev: Fold state enum into bool realized
     Applying: qdev: Prepare "realized" property
 
-The fetch command should be run whenever you want to refresh the patch database.
+The `fetch` command should be run whenever you want to refresh the patch
+database; it will download any new patches that have arrived since the
+last time you did a fetch.
+
+If you only use patches with one project you can set the default fetch
+URL by creating a `~/.patchesrc` file with the following contents:
+
+    [fetch]
+    # Default URL to use if 'patches fetch' is not given an argument:
+    url=http://wiki.qemu.org/patches/patches.json
 
 Search Language
 ---------------
