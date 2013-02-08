@@ -25,6 +25,10 @@ def add_tags(msg, tags):
 
     payload = msg.get_payload()
     mid = msg['Message-id']
+    if mid.startswith('<'):
+        mid = mid[1:]
+    if mid.endswith('>'):
+        mid = mid[:-1]
 
     in_sob = False
     done = False
