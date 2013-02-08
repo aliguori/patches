@@ -142,9 +142,13 @@ def parse_tag(line, extra_tags=[]):
 def merge_tags(lhs, rhs):
     val = {}
     for key in lhs:
+        if key in ['Message-id']:
+            continue
         val[key] = lhs[key]
 
     for key in rhs:
+        if key in ['Message-id']:
+            continue
         if key not in val:
             val[key] = []
         for tag in rhs[key]:

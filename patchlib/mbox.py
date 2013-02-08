@@ -20,8 +20,11 @@ def setup_mboxes():
     except Exception, e:
         pass
 
-def add_tags(payload, tags):
+def add_tags(msg, tags):
     lines = []
+
+    payload = msg.get_payload()
+    mid = msg['Message-id']
 
     in_sob = False
     done = False
@@ -44,14 +47,18 @@ def add_tags(payload, tags):
                 continue
 
             if tag:
+                key = tag.keys()[0]
+                value = tag[key]
+
+                # always drop message-id tags
+                if key == 'Message-id':
+                    continue
+
                 # if we hit a tag and there's whitespace before the tag, preserve it
                 if whitespace:
                     lines += whitespace
                     whitespace = []
                 lines.append(line)
-
-                key = tag.keys()[0]
-                value = tag[key]
 
                 # Don't duplicate tags
                 if key in tags and value[0] in tags[key]:
@@ -66,6 +73,7 @@ def add_tags(payload, tags):
                     for val in tags[key]:
                         if val:
                             lines.append('%s: %s' % (key, val))
+                lines.append('Message-id: %s' % mid)
 
                 # but before any whitespace preceeding this line
                 if whitespace:
@@ -88,7 +96,7 @@ def generate_mbox(messages, full_tags):
     mbox = mailbox.mbox(tmp_mbox_path, create=True)
     for message, tags in messages:
         msg = message.get_message_parts()[0]
-        msg.set_payload(add_tags(msg.get_payload(), merge_tags(full_tags, tags)))
+        msg.set_payload(add_tags(msg, merge_tags(full_tags, tags)))
         mbox.add(msg)
     mbox.flush()
     mbox.close()
