@@ -10,7 +10,7 @@
 # See the COPYING file in the top-level directory.
 #
 
-from urllib2 import urlopen
+from urllib2 import urlopen, HTTPError
 from util import *
 import config, mbox, data
 import os, json
@@ -88,7 +88,12 @@ def fetch(url=None):
         print 'Fetching mbox for %s' % series['messages'][0]['subject']
         base, _ = url.rsplit('/', 1)
 
-        fp = urlopen(base + '/' + series['mbox_path'])
+        try:
+            fp = urlopen(base + '/' + series['mbox_path'])
+        except HTTPError, e:
+            print 'Skipping mbox %s' % series['mbox_path']
+            continue
+            
         try:
             mbox_data = fp.read()
         finally:
