@@ -24,11 +24,12 @@ def add_tags(msg, tags):
     lines = []
 
     payload = msg.get_payload()
-    mid = msg['Message-id']
-    if mid.startswith('<'):
-        mid = mid[1:]
-    if mid.endswith('>'):
-        mid = mid[:-1]
+    mid = msg['Message-ID']
+    if mid:
+        if mid.startswith('<'):
+            mid = mid[1:]
+        if mid.endswith('>'):
+            mid = mid[:-1]
 
     in_sob = False
     done = False
@@ -77,7 +78,8 @@ def add_tags(msg, tags):
                     for val in tags[key]:
                         if val:
                             lines.append('%s: %s' % (key, val))
-                lines.append('Message-id: %s' % mid)
+                if mid:
+                    lines.append('Message-id: %s' % mid)
 
                 # but before any whitespace preceeding this line
                 if whitespace:
