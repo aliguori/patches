@@ -42,7 +42,7 @@ To get started with the QEMU project:
        [1/2] target-ppc: Slim conversion of model definitions to QOM subcl..
        [2/2] target-ppc: Error out for -cpu host on unknown PVR
     ...
-    $ patches apply 1357498122-1129-1-git-send-email-afaerber@suse.de
+    $ patches apply id:1357498122-1129-1-git-send-email-afaerber@suse.de
     Applying: qdev: Fold state enum into bool realized
     Applying: qdev: Prepare "realized" property
 
@@ -118,6 +118,9 @@ series or pull request.  This is meant to allow integration with mail clients
 that can call out to a external program to process a mail.  An ELISP function
 is provided in patches.el that can be bound to a key press to apply a patch
 directly from the notmuch-search major mode.
+
+`patches apply` takes a query string, so you usually want to provide a search
+string with an `id:` function.
 
 Notifying on Commits
 --------------------
