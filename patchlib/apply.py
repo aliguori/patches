@@ -47,6 +47,8 @@ def apply_pull_request(pull_request, **kwds):
 def apply_series(series, **kwds):
    if is_pull_request(series):
        return apply_pull_request(series['messages'][0]['pull-request'], **kwds)
+   elif is_broken(series):
+       raise Exception('Cannot apply series: series is either incomplete or improperly threaded.')
    elif not 'mbox_path' in series:
        raise Exception('Cannot apply series: missing mbox')
    return apply_patch(mbox.get_real_path(series['mbox_path']), **kwds)
@@ -62,9 +64,13 @@ def main(args):
         kwds['signed-off-by'] = True
 
     for series in find_subseries(patches, args):
-        s, _ = apply_series(series, **kwds)
-        if s:
-            return s
+        try:
+            s, _ = apply_series(series, **kwds)
+            if s:
+                return s
+        except Exception, e:
+            print str(e)
+            return 1
 
     return 0
             
