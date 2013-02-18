@@ -60,9 +60,9 @@ URL by creating a `~/.patchesrc` file with the following contents:
 Search Language
 ---------------
 
-The query language supported by patches support boolean operators: "and" and
-"or", and unary operators: "not", "any", and "all".  Paranthesis and string
-quotation is also supported.  Terms are matched using substring search within
+The query language supported by patches supports boolean operators: "and" and
+"or", and unary operators: "not", "any", and "all".  Parentheses and string
+quotation are also supported.  Terms are matched using substring search within
 the subject.
 
 The "any" and "all" operators change whether the search term applies to at least
@@ -145,5 +145,5 @@ Since patches is looking at a 30 day history, the first time you run it, it
 will want to send a very large number of notifications.
 
 To setup the database and avoid these notifications, you should run with the
-`--fake` option for the first time.  This will pretend like the emails are
+`--fake` option for the first time.  This will pretend that the emails are
 being sent without actually sending them.
