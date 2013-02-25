@@ -103,6 +103,7 @@ def main(args):
                                       help='Apply a patch or pull request')
     subparser.add_argument('--git-dir', type=str, help='Path to git working directory')
     subparser.add_argument('-s', action='store_true', help='Add Signed-off-by when applying patches')
+    subparser.add_argument('--interactive', action='store_true', help='Run git-am in interactive mode')
     subparser.add_argument('query', type=str, nargs='+', help='Query string for patches to apply')
     subparser.set_defaults(func=do_apply)
 

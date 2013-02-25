@@ -22,6 +22,9 @@ def apply_patch(pathname, **kwds):
     if 'signed-off-by' in kwds:
         opts.append('-s')
         del kwds['signed-off-by']
+    if 'interactive' in kwds:
+        opts.append('-i')
+        del kwds['interactive']
     opts.append(pathname)
     return call_teed_output(['git', 'am'] + opts, **kwds)
 
@@ -32,6 +35,8 @@ def apply_pull_request(pull_request, **kwds):
 
     if 'signed-off-by' in kwds:
         del kwds['signed-off-by']
+    if 'interactive' in kwds:
+        del kwds['interactive']
 
     if uri not in remotes:
         raise Exception('%s is not setup as a remote, please add a remote manually' % pull_request['uri'])
@@ -62,6 +67,8 @@ def main(args):
         kwds['cwd'] = args.git_dir
     if args.s:
         kwds['signed-off-by'] = True
+    if args.interactive:
+        kwds['interactive'] = True
 
     for series in find_subseries(patches, args):
         try:
