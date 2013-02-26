@@ -90,6 +90,19 @@ def dump_full_query(patches, args):
         out('Message-id: %s', msg['message-id'])
         out('From: %s <%s>', msg['from']['name'], msg['from']['email'])
         out('Date: %s', msg['date'])
+        ret = message.decode_subject_text(msg['subject'])
+        tags = []
+        if ret['rfc']:
+            tags.append("RFC")
+        if 'pull-request' in ret and ret['pull-request']:
+            tags.append("PULL")
+        if 'for-release' in ret:
+            tags.append("for-" + ret['for-release'])
+        if ret['version'] != 1:
+            tags.append('v' + str(ret['version']))
+        if tags:
+            out('Tags: %s', ", ".join(tags))
+        
         for msg in series['messages']:
             ret = message.decode_subject_text(msg['subject'])
             out('   [%s/%s] %s', ret['n'], ret['m'], ret['subject'])
