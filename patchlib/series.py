@@ -61,6 +61,8 @@ def is_reviewed(series):
 
     for message in series['messages']:
         if message.has_key('cover') and message['cover']:
+            if 'Reviewed-by' in message['tags']:
+                return True
             continue
 
         if 'Reviewed-by' not in message['tags']:

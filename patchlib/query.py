@@ -99,6 +99,7 @@ def parse_query(terms):
     return parse_query_binop(terms)
 
 def eval_messages(series, fn, scope, cover=True):
+    ret = None
     first = True
     for msg in series['messages']:
         if not cover and message.is_cover(msg):
