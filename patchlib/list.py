@@ -84,6 +84,12 @@ def dump_oneline_query(patches, args):
         out('%s %s', series['messages'][0]['message-id'],
             series['messages'][0]['subject'])
 
+def dump_commits(patches, args):
+    for series in find_subseries(patches, args):
+        for msg in series['messages']:
+            if 'commit' in msg:
+                print msg['commit']
+
 def dump_full_query(patches, args):
     for series in find_subseries(patches, args):
         msg = series['messages'][0]
@@ -118,6 +124,8 @@ def main(args):
         dump_oneline_query(patches, args)
     elif args.format == 'full':
         dump_full_query(patches, args)
+    elif args.format == 'commits':
+        dump_commits(patches, args)
     else:
         raise Exception('unknown output type %s' % args.output)
 
