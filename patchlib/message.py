@@ -12,6 +12,19 @@
 
 import config
 from email.header import decode_header
+from email.utils import parseaddr
+
+def parse_email_address(value):
+    name, mail = parseaddr(value)
+    return { 'name': name, 'email': mail }
+
+def parse_email_addresses(value):
+    if value:
+        if value.find(', ') == -1:
+            return [ parse_email_address(value) ]
+        else:
+            return map(parse_email_address, value.split(', '))
+    return []
 
 def get_header(msg, name):
     value = u''
@@ -157,6 +170,18 @@ def merge_tags(lhs, rhs):
 
     return val
     
+def isin(needle, lst):
+    for item in lst:
+        if needle['name'] == item['name'] and needle['email'] == item['email']:
+            return True
+    return False
+
+def dedup(lst):
+    new_lst = []
+    for item in lst:
+        if not isin(item, new_lst):
+            new_lst.append(item)
+    return new_lst
 
 def find_extra_tags(msg, leader):
     extra_tags = {}
@@ -172,12 +197,17 @@ def find_extra_tags(msg, leader):
         if tag:
             extra_tags = merge_tags(extra_tags, tag)
 
+    to_addrs = parse_email_addresses(get_header(msg, 'To'))
+    cc_addrs = parse_email_addresses(get_header(msg, 'Cc'))
+
     if not leader:
         for reply in msg.get_replies():
-            new_tags = find_extra_tags(reply, leader)
+            new_tags, new_to, new_cc = find_extra_tags(reply, leader)
             extra_tags = merge_tags(extra_tags, new_tags)
+            to_addrs += new_to
+            cc_addrs += new_cc
 
-    return extra_tags
+    return extra_tags, dedup(to_addrs), dedup(cc_addrs)
 
 def cmp_patch(a, b):
     a_n = parse_subject(a[0])[0]

@@ -16,24 +16,11 @@ import series as series_
 from time import time
 from ConfigParser import RawConfigParser
 from email.header import decode_header
-from email.utils import parseaddr
 from util import *
 import os
 
 def days_to_seconds(value):
     return value * 24 * 60 * 60
-
-def parse_email_address(value):
-    name, mail = parseaddr(value)
-    return { 'name': name, 'email': mail }
-
-def parse_email_addresses(value):
-    if value:
-        if value.find(', ') == -1:
-            return [ parse_email_address(value) ]
-        else:
-            return map(parse_email_address, value.split(', '))
-    return []
 
 def unique(lst):
     return list(set(lst))
@@ -135,11 +122,9 @@ def build_patch(commits, merged_heads, msg, trees, leader=False):
         patch['url'] = trees[c['branch']] % patch['commit']
         patch['committer'] = c['committer']
 
-    patch['tags'] = message.find_extra_tags(msg, leader)
+    patch['tags'], patch['to'], patch['cc'] = message.find_extra_tags(msg, leader)
     patch['subject'] = message.get_subject(msg)
     patch['message-id'] = msg.get_message_id()
-    patch['cc'] = parse_email_addresses(message.get_header(msg, 'Cc'))
-    patch['to'] = parse_email_addresses(message.get_header(msg, 'To'))
     if sub['rfc']:
         patch['rfc'] = sub['rfc']
     if sub.has_key('for-release'):
@@ -147,7 +132,7 @@ def build_patch(commits, merged_heads, msg, trees, leader=False):
     if sub.has_key('tags'):
         patch['subject-tags'] = sub['tags']
 
-    patch['from'] = parse_email_address(message.get_header(msg, 'From'))
+    patch['from'] = message.parse_email_address(message.get_header(msg, 'From'))
 
     d = datetime.date.fromtimestamp(msg.get_date())
     patch['date'] = d.strftime('%Y-%m-%d')
@@ -217,8 +202,10 @@ def build_patches(notmuch_dir, search_days, mail_query, trees):
 
             # any first level replies are replies to the top level post.
             if not message.is_patch(reply):
-                new_tags = message.find_extra_tags(reply, False)
+                new_tags, to, cc = message.find_extra_tags(reply, False)
                 patch_list[0]['tags'] = message.merge_tags(patch_list[0]['tags'], new_tags)
+                patch_list[0]['to'] = message.dedup(patch_list[0]['to'] + to)
+                patch_list[0]['cc'] = message.dedup(patch_list[0]['cc'] + cc)
             else:
                 patch = build_patch(commits, merged_heads, reply, trees)
                 patch_list.append(patch)
